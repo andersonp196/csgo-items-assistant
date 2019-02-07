@@ -1,0 +1,41 @@
+{
+  "name": "CSGO Items Assistant",
+  "description": "An extension meant to help.",
+  "version": "1.0",
+  "manifest_version": 2,
+  "content_scripts": [
+    {
+      "matches": ["*://*.steamcommunity.com/tradeoffer/*"],
+      "run_at" : "document_idle",
+      "js": ["js/tradeoffer.js", "js/util.js"]
+    },
+    {
+      "matches": ["*://*.steamcommunity.com/id/*/tradeoffers/*"],
+      "run_at" : "document_idle",
+      "js": ["js/tradeoffers.js", "js/util.js"]
+    },
+    {
+      "matches": ["*://*.steamcommunity.com/id/*/inventory/*"],
+      "run_at" : "document_idle",
+      "js": ["js/inventory.js", "js/util.js"]
+    },
+    {
+      "matches": ["*://*.steamcommunity.com/market/listings/730/*"],
+      "run_at" : "document_idle",
+      "js": ["js/market.js", "js/util.js"]
+    }
+
+  ],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "unlimitedStorage",
+    "webRequest",
+    "*://*.steamcommunity.com/*",
+    "https://csgobackpack.net/",
+    "https://api.csgofloat.com/"
+  ],
+  "browser_action": {
+    "default_popup": "html/popup.html"
+  }
+}
