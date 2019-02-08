@@ -29,5 +29,6 @@ This is a browser extension (google chrome) that helps with csgo item pricing wh
 ##### Todo
 - add data stashing for the market so floats will stay with listings until page is reloaded
 - add screenshot links within trades
-- add more features with trades & inventories such as stacking keys
-- make trades work when opened in new window
+- add floats within page
+- fix adding x items when there are stacked keys in inventory
+- load inventory differently with JSON
