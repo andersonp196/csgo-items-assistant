@@ -2,8 +2,8 @@ async function stack() {
   document.getElementById('formatBtn').style.backgroundColor = '#51f751';
   document.getElementById('formatBtn').innerText = 'Working...';
 
-  loadAll();
-  await sleep(100000);
+  await loadIcons();
+  //await loadItems();
 
   var inventory_ctn = document.getElementsByClassName('inventory_ctn'),
       inventories = [],
@@ -22,13 +22,15 @@ async function stack() {
     inventoryIds = [inventoryIds[1], inventoryIds[0]];
   }
 
+  var itemData = [];
   for (var i = 0; i < inventories.length; i++) {
     var items = inventories[i].querySelectorAll('div.itemHolder')
         data = [],
         used = [];
     for (var j = 0; j < items.length; j++) {
       if (!items[j].classList.contains('disabled')) {
-        var itemLink = `document.getElementById('${inventoryIds[i]}').querySelectorAll('div.itemHolder')[${j}].querySelector('div.item')`;
+        var itemId = items[j].querySelector('div.item').id;
+        var itemLink = `document.getElementById('${itemId}')`;
         pageCode(`try {
                     document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.actions[0].link + ',';
                   }catch(err) {
@@ -37,11 +39,67 @@ async function stack() {
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.name + ','
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.type`);
         var itemInfo = document.getElementById('hiddenDiv').innerText.split(',');
-        data.push({html: items[j], info: {inspect: itemInfo[0], name: itemInfo[1], type: itemInfo[2]}, count: 1});
+
+        if (used.includes(itemInfo[1]) && (itemInfo[2].includes('Key') || itemInfo[2].includes('Container') || itemInfo[2].includes('Graffiti') || itemInfo[2].includes('Sticker'))) {
+          //item is duplicate
+          var index = data.findIndex(function(item) {
+            return item.info.name == itemInfo[1];
+          });
+          data[index].count++;
+        }else {
+          //first of this item
+          data.push({html: items[j], info: {inspect: itemInfo[0], name: itemInfo[1], type: itemInfo[2]}, count: 1});
+          used.push(itemInfo[1]);
+        }
       }
     }
-    console.log(data);
+    itemData.push(data);
   }
+
+  /*for (var i = 0; i < inventories.length; i++) {
+    inventories[i].innerHTML = '';
+    for (var j = 0; j < itemData[i].length; j++) {
+      if (j%16 == 0) {
+        var inventory_page = document.createElement('div');
+        inventory_page.classList.add('inventory_page');
+        if (j == 0) {
+          inventory_page.style.display = 'block';
+        }else {
+          inventory_page.style.display = 'none';
+        }
+        inventories[i].append(inventory_page);
+      }
+      if (itemData[i][j].count > 1) {
+        var p = document.createElement('p');
+        p.innerHTML = String(itemData[i][j].count);
+        p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 3;color: #daa429;';
+        itemData[i][j].html.append(p);
+      }
+      inventories[i].querySelectorAll('div.inventory_page')[inventories[i].querySelectorAll('div.inventory_page').length-1].append(itemData[i][j].html);
+    }
+  }*/
+
+  for (var i = 0; i < inventories.length; i++) {
+    var invPages = inventories[i].querySelectorAll('div.inventory_page');
+    for (var j = 0; j < invPages.length; j++) {
+      invPages[j].innerHTML = '';
+      for (var k = 0; k < 16; k++) {
+        if (itemData[i][(j*16)+k] !== undefined) {
+          if (itemData[i][(j*16)+k].count > 1) {
+            var p = document.createElement('p');
+            p.innerHTML = String(itemData[i][(j*16)+k].count);
+            p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 3;color: #daa429;';
+            itemData[i][(j*16)+k].html.append(p);
+          }
+          invPages[j].append(itemData[i][(j*16)+k].html);
+        }
+      }
+      if (invPages[j].innerHTML == '') {
+        invPages[j].style.display = 'none';
+      }
+    }
+  }
+
   document.getElementById('formatBtn').style.display = 'none';
 
   /*for (var k = 0; k < 2; k++) {
@@ -157,31 +215,7 @@ async function removeAllItems(btn) {
   }
 }
 
-async function loadAll() {
-  //can look into speeding this up by using the filter search with random letter (forces everything to load?)
-  /*pageCode('TradePageSelectInventory(UserThem, 730, 2)');
-  await sleep(3000);
-  var inventories = document.querySelectorAll('div.inventory_ctn');
-
-  for (var i = 0; i < inventories.length; i++) {
-    if (inventories[i].id.includes('730')) {
-      var items = inventories[i].querySelectorAll('div.itemHolder'),
-          itemIds = [];
-      for (var j = 0; j < items.length; j++) {
-        if (!items[j].classList.contains('disabled')) {
-          itemIds.push(items[j].querySelector('div.item').id);
-        }
-      }
-      console.log(itemIds);
-      for (var j = 0; j < itemIds.length; j++) {
-        pageCode("MoveItemToTrade(document.querySelector('#" + itemIds[j] + "').parentNode)");
-        pageCode("MoveItemToInventory(document.querySelector('#" + itemIds[j] + "'))");
-      }
-    }
-  }
-  pageCode('TradePageSelectInventory(UserYou, 730, 2)');
-  return 'done';*/
-
+async function loadIcons() {
   //go to their inventory and wait for items to load
   pageCode('TradePageSelectInventory(UserThem, 730, 2)');
   var loaded = false;
@@ -205,9 +239,31 @@ async function loadAll() {
   pageCode('TradePageSelectInventory(UserYou, 730, 2)');
   await sleep(10);
   //filter items to load all icons
+  pageCode(`Filter.ApplyFilter('case')`);
+  await sleep(10);
   pageCode(`Filter.ApplyFilter('')`);
   await sleep(10);
   return 'done';
+}
+
+async function loadItems() {
+  pageCode('TradePageSelectInventory(UserThem, 730, 2)');
+  var loaded = false;
+  while (loaded == false) {
+    var inventories = document.querySelectorAll('div.inventory_ctn'),
+        inv730 = 0;
+    for (var i = 0; i < inventories.length; i++) {
+      if (inventories[i].id.includes('730')) {
+        inv730++;
+      }
+      if (inv730 == 2) {
+        loaded = true;
+      }
+    }
+    await sleep(10);
+  }
+  await sleep(100);
+  pageCode('TradePageSelectInventory(UserYou, 730, 2)');
 }
 
 function addDOMElements() {
