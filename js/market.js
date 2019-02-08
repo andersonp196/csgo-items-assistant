@@ -19,6 +19,19 @@ async function addMarketBtns() {
     });
     items[i].append(btn2);
   }
+
+  var itemBtns = [10, 20, 50, 100];
+  for (var i = 0; i < itemBtns.length; i++) {
+    var itemBtn = document.createElement('button');
+    itemBtn.innerText = itemBtns[i] + ' Items';
+    itemBtn.style = 'background-color: orange;border: 1px solid black;margin-right: 0.5%;';
+    itemBtn.id = 'btn' + itemBtns[i];
+    itemBtn.addEventListener('click', function() {
+      var start = Number(document.getElementById('searchResults_start').innerText);
+      window.location.href = window.location.href.split('?')[0] + '?query=&start=' + start + '&count=' + this.id.replace('btn', '');
+    });
+    document.getElementsByClassName('market_paging_summary ellipsis')[0].append(itemBtn);
+  }
 }
 
 function getIds() {

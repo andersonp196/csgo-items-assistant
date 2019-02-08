@@ -10,6 +10,19 @@ This is a browser extension (google chrome) that helps with csgo item pricing wh
 - Or use on an inventory page in chrome ( https://steamcommunity.com/id/SOMEBODYSID/inventory/ )
 - Enjoy?
 
+### Current Functionality
+- Inventory
+  - a
+- Market
+  - Button to get float and screenshot of item
+  - Button to do that for all items on page
+  - Buttons to load 10, 20, 50, or 100 items per page
+- Tradeoffer
+  - a
+- Tradeoffers Page (incoming & sent)
+  - Button to get prices of all items in trade
+  - Totals for both sides of trade
+
 ### Common Errors
 - Please try reloading the page a few times if the extension isn't working. For some reason that fixes things sometimes.
 
