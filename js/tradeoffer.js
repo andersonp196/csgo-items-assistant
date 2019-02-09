@@ -81,12 +81,45 @@ async function stack() {
           if (curItem !== undefined) {
             var p = document.createElement('p');
             p.innerHTML = String(curItem.count);
+            p.classList.add('count');
             if (curItem.count > 1) {
-              p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #daa429;';
+              p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #ff7d00;';
             }else {
-              p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #daa429;display: none;';
+              p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #ff7d00;display: none;';
             }
             curItem.html.append(p);
+
+            try {
+              var priceOptions = Object.keys(itemPriceData.items_list[currItemInfo[1]].price);
+              var price;
+              if (priceOptions.includes('7_days')) {
+                price = itemPriceData.items_list[currItemInfo[1]].price['7_days'].average;
+              }else if (priceOptions.includes('30_days')) {
+                price = itemPriceData.items_list[currItemInfo[1]].price['30_days'].average;
+              }else if (priceOptions.includes('all_time')) {
+                price = itemPriceData.items_list[currItemInfo[1]].price['all_time'].average;
+              }else {
+                price = 'error';
+              }
+              
+              var p2 = document.createElement('p');
+              p2.classList.add('price');
+              var color;
+              if (price != 'error') {
+                p2.innerText = '$' + price;
+                color = '#daa429';
+              }else {
+                p2.innerText = price;
+                color = 'yellow';
+              }
+              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
+              curItem.html.append(p2);
+            }catch(err) {
+              var p2 = document.createElement('p');
+              p.innerHTML = 'error';
+              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
+              curItem.html.append(p2);
+            }
 
             if (currItemInfo[0] !== 'null' && !currItemInfo[2].includes('Sticker') && !currItemInfo[2].includes('Graffiti') && !currItemInfo[2].includes('Key') && !currItemInfo[2].includes('Container')) {
               var a = document.createElement('a');
@@ -128,7 +161,6 @@ async function addItems(numToAdd) {
   }else {
     total = numToAdd;
   }
-  console.log(total);
 
   for (var i = 0; i < pages.length; i++) {
     var items = pages[i].querySelectorAll('div.item');
@@ -152,12 +184,11 @@ async function addItems(numToAdd) {
       permSpots.splice(index, 0, null);
     }
   }
-  console.log(itemIds);
 
   if (itemIds.length < total) {
     total = itemIds.length;
   }
-  console.log(total);
+
   for (var i = 0; i < total; i++) {
     console.log(itemIds[i]);
     await pageCode("MoveItemToTrade(document.querySelector('#" + itemIds[i] + "').parentNode)");
@@ -181,7 +212,7 @@ async function addAllItems() {
 
   for (var i = 0; i < items.length; i++) {
     if (items[i].style.display !== 'none') {
-      total += Number(items[i].querySelector('p').innerText);
+      total += Number(items[i].querySelector('p.count').innerText);
     }
   }
 
@@ -356,7 +387,7 @@ async function start() {
           }
         }
 
-        var itemP = items[i].querySelector('p');
+        var itemP = items[i].querySelector('p.count');
         var itemInfo = items[i].querySelector('div.itemInfo');
         //if item has <p> element and iteminfo div
         if (itemInfo !== null && itemP !== null) {
@@ -384,8 +415,8 @@ async function start() {
               }
             }
             //set <p> to proper total of items that are not in trade
-            if (items[i].querySelector('p').innerText !== String(total)) {
-              items[i].querySelector('p').innerText = String(total);
+            if (items[i].querySelector('p.count').innerText !== String(total)) {
+              items[i].querySelector('p.count').innerText = String(total);
             }
             total = 0;
           }
@@ -419,36 +450,7 @@ async function priceThisTrade() {
                 }
                 document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.market_name`);
       var itemInfo = document.getElementById('hiddenDiv').innerText.split(',');
-      try {
-        var priceOptions = Object.keys(itemPriceData.items_list[itemInfo[1]].price);
-        var price;
-        if (priceOptions.includes('7_days')) {
-          price = itemPriceData.items_list[itemInfo[1]].price['7_days'].average;
-        }else if (priceOptions.includes('30_days')) {
-          price = itemPriceData.items_list[itemInfo[1]].price['30_days'].average;
-        }else if (priceOptions.includes('all_time')) {
-          price = itemPriceData.items_list[itemInfo[1]].price['all_time'].average;
-        }else {
-          price = 'error';
-        }
-        var p = document.createElement('p');
-        var color;
-        if (price != 'error') {
-          p.innerHTML = '$' + price;
-          total += price;
-          color = '#daa429';
-        }else {
-          p.innerHTML = price;
-          color = 'yellow';
-        }
-        p.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);color: ' + color + ';';
-        items[j].append(p);
-      }catch(err) {
-        var p = document.createElement('p');
-        p.innerHTML = 'error';
-        p.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);color: yellow;';
-        items[j].append(p);
-      }
+
     }
 
     if (items.length > 0 && btn.parentNode.querySelectorAll('span').length < 2) {
