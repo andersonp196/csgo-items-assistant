@@ -12,9 +12,9 @@ async function updateItemData() {
   var x = new XMLHttpRequest();
   x.open('GET', 'https://csgobackpack.net/api/GetItemsList/v2/?currency=USD&no_details=true', true);
   x.onload = function () {
-    itemData = JSON.parse(this.response);
-    chrome.storage.local.set({itemData: itemData}, () => {
-      console.log('Reacquired itemData.');
+    itemPriceData = JSON.parse(this.response);
+    chrome.storage.local.set({itemPriceData: itemPriceData}, () => {
+      console.log('Reacquired itemPriceData.');
     });
   }
   x.send();
@@ -39,4 +39,5 @@ function pageCode(code) {
   var code = document.createTextNode('(function() {' + code + '})();');
   script.appendChild(code);
   document.body.appendChild(script);
+  return 'done';
 }

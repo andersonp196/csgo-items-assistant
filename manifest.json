@@ -7,22 +7,22 @@
     {
       "matches": ["*://*.steamcommunity.com/tradeoffer/*"],
       "run_at" : "document_idle",
-      "js": ["js/tradeoffer.js", "js/util.js"]
+      "js": ["js/util.js", "js/tradeoffer.js"]
     },
     {
       "matches": ["*://*.steamcommunity.com/id/*/tradeoffers/*"],
       "run_at" : "document_idle",
-      "js": ["js/tradeoffers.js", "js/util.js"]
+      "js": ["js/util.js", "js/tradeoffers.js"]
     },
     {
       "matches": ["*://*.steamcommunity.com/id/*/inventory/*"],
       "run_at" : "document_idle",
-      "js": ["js/inventory.js", "js/util.js"]
+      "js": ["js/util.js", "js/inventory.js"]
     },
     {
       "matches": ["*://*.steamcommunity.com/market/listings/730/*"],
       "run_at" : "document_idle",
-      "js": ["js/market.js", "js/util.js"]
+      "js": ["js/util.js", "js/market.js"]
     }
 
   ],
