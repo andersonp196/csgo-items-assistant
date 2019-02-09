@@ -23,6 +23,17 @@ async function stack() {
 
   var itemData = [];
   for (var i = 0; i < inventories.length; i++) {
+    var duplicates = inventories[i].querySelector('#duplicates');
+    if (duplicates == null) {
+      var d = document.createElement('div');
+      d.style.display = 'none';
+      d.id = 'duplicates';
+      inventories[i].append(d);
+      duplicates = inventories[i].querySelector('#duplicates');
+    }else {
+      duplicates.innerHTML = '';
+    }
+
     var items = inventories[i].querySelectorAll('div.itemHolder')
         data = [],
         used = [];
@@ -38,16 +49,22 @@ async function stack() {
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.name + ','
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.type`);
         var itemInfo = document.getElementById('hiddenDiv').innerText.split(',');
+        var d = document.createElement('div');
+        d.innerText = `${itemInfo[0]},${itemInfo[1]},${itemInfo[2]}`;
+        d.classList.add('itemInfo');
+        d.style.display = 'none';
+        items[j].append(d);
 
         if (used.includes(itemInfo[1]) && (itemInfo[2].includes('Key') || itemInfo[2].includes('Container') || itemInfo[2].includes('Graffiti') || itemInfo[2].includes('Sticker'))) {
           //item is duplicate
           var index = data.findIndex(function(item) {
-            return item.info.name == itemInfo[1];
+            return item.html.querySelector('itemInfo').split(',')[1] == itemInfo[1];
           });
           data[index].count++;
+          duplicates.append(items[j]);
         }else {
           //first of this item
-          data.push({html: items[j], info: {inspect: itemInfo[0], name: itemInfo[1], type: itemInfo[2]}, count: 1});
+          data.push({html: items[j], count: 1});
           used.push(itemInfo[1]);
         }
       }
@@ -60,16 +77,17 @@ async function stack() {
     for (var j = 0; j < invPages.length; j++) {
       invPages[j].innerHTML = '';
       for (var k = 0; k < 16; k++) {
-        if (itemData[i][(j*16)+k] !== undefined) {
+        var curItem = itemData[i][(j*16)+k];
+        if (curItem !== undefined) {
           var p = document.createElement('p');
-          p.innerHTML = String(itemData[i][(j*16)+k].count);
-          if (itemData[i][(j*16)+k].count > 1) {
-            p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 3;color: #daa429;';
+          p.innerHTML = String(curItem.count);
+          if (curItem.count > 1) {
+            p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #daa429;';
           }else {
-            p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 3;color: #daa429;display: none;';
+            p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #daa429;display: none;';
           }
           itemData[i][(j*16)+k].html.append(p);
-          invPages[j].append(itemData[i][(j*16)+k].html);
+          invPages[j].append(curItem.html);
         }
       }
       if (invPages[j].innerHTML == '') {
@@ -84,22 +102,37 @@ async function stack() {
 async function addItems() {
   pageCode(`document.getElementById('hiddenDiv').innerText = g_ActiveInventory.elInventory.id`);
   var inventory = document.getElementById(document.getElementById('hiddenDiv').innerText),
-      items = inventory.querySelectorAll('div.itemHolder'),
+      pages = inventory.querySelectorAll('div.inventory_page'),
       total = Number(document.getElementById('addItemsInp').value),
-      toAdd = [];
+      duplicates = inventories[i].querySelector('#duplicates');
+      toAdd = [],
+      itemIds = [],
+      itemNames = [];
 
-  for (var i = 0; i < items.length; i++) {
-    if (items[i].style.display !== 'none' && items[i].querySelectorAll('div.item').length > 0) {
-
-      toAdd.push(items[i]);
+  for (var i = 0; i < pages.length; i++) {
+    var items = pages[i].querySelectorAll('div.item');
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].style.display !== 'none') {
+        itemIds.push(items[i].id);
+        itemNames.push(items[i].querySelector('itemInfo').split(',')[1]);
+      }
     }
   }
-  if (toAdd.length < total) {
-    total = toAdd.length;
+
+  //here go through duplicates and if they are the same item as items already added (not invisible), add them to itemIds list
+  //this may mess up if you add items multiple times
+  for (var i = 0; i < duplicates.length; i++) {
+    if (itemName.includes(duplicates[i].querySelector('itemInfo').split(',')[1])) {
+      //if one of the names of items that match steam filter is in duplicates
+      itemIds.push(duplicates[i].querySelector('item').id);
+    }
+  }
+
+  if (itemIds.length < total) {
+    total = itemIds.length;
   }
   for (var i = 0; i < total; i++) {
-    var itemId = toAdd[j].querySelector('div.item').id;
-    pageCode("MoveItemToTrade(document.querySelector('#" + itemId + "').parentNode)");
+    pageCode("MoveItemToTrade(document.querySelector('#" + itemIds[i] + "').parentNode)");
     await sleep(25);
   }
 }
