@@ -33,7 +33,7 @@ async function start() {
   x.open('GET', ('https://steamcommunity.com/profiles/' + userId + '/inventory/json/730/2'), true);
   x.onload = async function () {
     var data = JSON.parse(this.response);
-    var itemData = dataLoaded(data);
+    var itemData = dataLoaded(data, userId);
     sortData(itemData, data, userId);
   }
   x.send();
@@ -50,67 +50,39 @@ async function veryStart() {
 }
 veryStart();
 
-function dataLoaded(data) {
+function dataLoaded(data, userId) {
   var itemData = [];
-  for (var key in data.rgDescriptions) {
-    var thisData = data.rgDescriptions[key];
+  for (var key in data.rgInventory) {
+    var thisData = data.rgInventory[key];
+    var pos = thisData.pos;
+    var classid = thisData.classid;;
+    var instanceid = thisData.instanceid;
+    var id = thisData.id;
 
-    var type;
-    try {
-      type = thisData.type;
-    }catch(err) {
-      type = null;
-    }
-
-
-    var exterior;
-    try {
-      var ext = thisData.descriptions[0].value;
-      if (ext == 'Exterior: Factory New') {
-        exterior = 'FN';
-      }else if (ext == 'Exterior: Minimal Wear') {
-        exterior = 'MW';
-      }else if (ext == 'Exterior: Field-Tested') {
-        exterior = 'FT';
-      }else if (ext == 'Exterior: Well-Worn') {
-        exterior = 'WW';
-      }else if (ext == 'Exterior: Battle-Scarred') {
-        exterior = 'BS';
-      }else {
-        exterior = '';
-      }
-    }catch(err) {
+    var descriptionData = data.rgDescriptions[classid + '_' + instanceid];
+    var type = descriptionData.type;
+    var ext = descriptionData.descriptions[0].value;
+    if (ext == 'Exterior: Factory New') {
+      exterior = 'FN';
+    }else if (ext == 'Exterior: Minimal Wear') {
+      exterior = 'MW';
+    }else if (ext == 'Exterior: Field-Tested') {
+      exterior = 'FT';
+    }else if (ext == 'Exterior: Well-Worn') {
+      exterior = 'WW';
+    }else if (ext == 'Exterior: Battle-Scarred') {
+      exterior = 'BS';
+    }else {
       exterior = '';
     }
-
-    var classid;
-    try {
-      classid = thisData.classid;
-    }catch(err) {
-      classid = null;
+    var name = descriptionData.market_name;
+    if (name.includes('Graffiti') && !name.includes('Sealed')) {
+      name = 'Sealed ' + name;
     }
-
-    var instanceid;
-    try {
-      instanceid = thisData.instanceid;
-    }catch(err) {
-      instanceid = null;
-    }
-
     var inspect;
-    try {
-      inspect = thisData.actions[0].link;
-    }catch(err) {
-      inspect = null;
+    if (descriptionData.actions !== undefined) {
+      inspect = descriptionData.actions[0].link.replace('%owner_steamid%', userId).replace('%assetid%', id);
     }
-
-    var name;
-    try {
-      name = thisData.market_name;
-    }catch(err) {
-      name = null;
-    }
-
     var price;
     try {
       var priceOptions = Object.keys(itemPriceData.items_list[name].price);
@@ -124,49 +96,20 @@ function dataLoaded(data) {
         price = 'error';
       }
     }catch(err) {
-    price = 'error';
+      price = 'error';
     }
+    var tradeable = descriptionData.tradeable;
 
-    var tradeable;
-    try {
-      tradeable = thisData.tradeable;
-    }catch(err) {
-      tradeable = null;
-    }
-
-    itemData.push({exterior: exterior, classid: classid, instanceid: instanceid, inspect: inspect, name: name, tradeable: tradeable, type: type, price: price});
+    itemData.push({exterior: exterior, id: id, classid: classid, instanceid: instanceid, inspect: inspect, name: name, tradeable: tradeable, type: type, price: price, pos: pos});
   }
+
+  itemData.sort(function(a,b){
+   return a.pos - b.pos;
+  });
   return itemData;
 }
 
 async function sortData(itemData, data, userId) {
-  console.log(data);
-  console.log(itemData);
-
-  /*var matched = [];
-  for (var key in data.rgInventory) {
-    //matching itemdata with rgInventory data
-    var rgInvData = data.rgInventory[key];
-    console.log(rgInvData.classid + '_' + rgInvData.instanceid);
-    //we have all the data of the items but don't know where to append it
-    //find the index of where the instance ids match
-    try {
-      var index = rgInvData.findIndex(function(item) {
-        return item.classid == rgInvData.classid && item.instanceid == rgInvData.instanceid;
-      });
-      console.log(index);
-
-      if (itemData[index].inspect !== null) {
-        itemData[index].inspect = itemData[index].inspect.replace('%owner_steamid%', userId).replace('%assetid%', rgInvData.id);
-      }
-      itemData[index].pos = rgInvData.pos;
-      matched.push(itemData[index]);
-    }catch(err) {
-      //nope
-    }
-  }
-  console.log(matched);*/
-
   await pageCode(`Filter.ApplyFilter('key')`);
   await sleep(100);
 
@@ -174,73 +117,55 @@ async function sortData(itemData, data, userId) {
   await sleep(100);
 
   var itemHolders = document.getElementById('inventory_' + userId + '_730_2').querySelectorAll('div.itemHolder:not(.disabled)');
-  for (var i = 0; i < matched.length; i++) {
-    itemHolders[matched[i].pos-1].style.position = 'relative';
+  for (var i = 0; i < itemData.length; i++) {
+    itemHolders[itemData[i].pos-1].style.position = 'relative';
 
     var p = document.createElement('p');
-    p.innerHTML = matched[i].exterior;
+    p.innerText = itemData[i].exterior;
     p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 2%; left: 5%; z-index: 4; color: #c44610;';
-    itemHolders[matched[i].pos-1].append(p);
+    itemHolders[itemData[i].pos-1].append(p);
 
-    if (!matched[i].type.includes('Sticker') && !matched[i].type.includes('Graffiti') && !matched[i].type.includes('Key') && !matched[i].type.includes('Container') && !matched[i].type.includes('Extraordinary Collectible')) {
+    if (!itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
       var a = document.createElement('a');
       a.innerText = 'Click for SS';
-      a.style = 'appearance: button; -moz-appearance: button;-webkit-appearance: button;text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
-      a.href = 'https://csgo.gallery/' + matched[i].inspect;
+      a.style = 'text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
+      a.href = 'https://csgo.gallery/' + itemData[i].inspect;
       a.setAttribute('target', '_blank');
-      itemHolders[matched[i].pos-1].append(a);
+      itemHolders[itemData[i].pos-1].append(a);
     }
 
-    if (matched[i].price != 'error') {
+    if (itemData[i].price != 'error') {
       var p2 = document.createElement('p');
-      p2.innerText = '$' + matched[i].price;
+      p2.innerText = '$' + itemData[i].price;
       p2.style = 'font-size: 14px; position: absolute; margin: 0; bottom: 2%; right: 5%; z-index: 4; color: #daa429;';
-      itemHolders[matched[i].pos-1].append(p2);
+      itemHolders[itemData[i].pos-1].append(p2);
+    }
+  }
+
+  function floats(link, index) {
+    var x = new XMLHttpRequest();
+    x.open('GET', link, true);
+    x.onload = async function() {
+      var wear = JSON.parse(this.response).iteminfo.floatvalue;
+      if (wear !== 0) {
+        var p = document.createElement('p');
+        p.innerText = String(wear.toFixed(10));
+        p.style = 'font-size: 14px; position: absolute; text-align: center; margin: 0; bottom: 60%; left: 50%; transform: translate(-50%, -50%); z-index: 4; width: 100%; font-weight: 600;background-color: black; color: #bdc6ff;';
+        itemHolders[index-1].append(p);
+      }
+    }
+    x.send();
+  }
+
+  var usedLinks = [];
+  for (var i = 0; i < itemData.length; i++) {
+    var link = 'https://api.csgofloat.com/?url=' + itemData[i].inspect;
+    console.log(itemData[i].inspect);
+    if (!usedLinks.includes(link) && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
+      var index = itemData[i].pos;
+      floats(link, index);
+      usedLinks.push(link);
+      await sleep(500);
     }
   }
 }
-/*
-  function addText(item, wear, link) {
-    var p = document.createElement('p');
-    p.innerHTML = wear.toFixed(10);
-    p.style = 'font-size: 13px;position: absolute;margin: 0;top: 90%;left: 50%;transform: translate(-50%, -50%);color: #daa429;';
-    item.getElementsByClassName('item app730')[0].append(p);
-
-    var a = document.createElement('a');
-    a.innerText = 'Click for SS';
-    a.style = 'appearance: button; -moz-appearance: button;-webkit-appearance: button;text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
-    a.href = 'https://csgo.gallery/' + link;
-    a.setAttribute('target', '_blank');
-    item.getElementsByClassName('item app730')[0].append(a);
-  }
-
-  var items = document.getElementsByClassName('inventory_item_link'),
-      itemHolders = document.getElementsByClassName('itemHolder'),
-      currPage = Number(document.getElementById('pagecontrol_cur').innerText),
-      start = (currPage-1)*25,
-      end = start + 25,
-      inspects = [];
-
-  if (end > items.length) {
-    end = items.length;
-  }
-
-  for (var i = 0; i < inspects.length; i++) {
-    var index = i+start
-    if (inspects[i] !== null) {
-      try {
-        var x = new XMLHttpRequest();
-        x.open('GET', ('https://api.csgofloat.com/?url=' + inspects[i]), true);
-        x.onload = function () {
-          var wear = JSON.parse(this.response).iteminfo.floatvalue;
-          addText(itemHolders[index], wear, inspects[i]);
-        }
-        x.send();
-      }catch(err) {
-
-      }
-      await sleep(400);
-    }
-    document.getElementsByClassName('inventory_page_right')[0].style.display = '';
-  }
-}*/

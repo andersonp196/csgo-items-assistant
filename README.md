@@ -12,8 +12,9 @@ This is a browser extension (google chrome) that helps with csgo item pricing wh
 
 ### Current Functionality
 - Inventory
-  - Button to get float and screenshot of item
+  - Button to get screenshot of items
   - Easily see exterior of items
+  - Display float of each item
   - Show average market price over last week of items
 - Market
   - Button to get float and screenshot of item
