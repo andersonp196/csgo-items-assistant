@@ -1,5 +1,6 @@
 {
   "name": "CSGO Items Assistant",
+  "short_name": "CIA",
   "description": "An extension to help with CSGO trading.",
   "version": "1.0.0",
   "manifest_version": 2,

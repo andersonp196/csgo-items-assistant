@@ -38,5 +38,4 @@ This is a browser extension (google chrome) that helps with csgo item pricing wh
 - change border around items if they are ST or souveneir (inventory and tradeoffer)
 - fix tradeoffer search being broken (add all keys to trade then remove them and try searching 'key' again)
 - add data stashing for the market so floats will stay with listings until page is reloaded
-- option to load floats in inventory and trades or not
 - add option to select currency
