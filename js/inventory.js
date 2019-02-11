@@ -101,7 +101,7 @@ function dataLoaded(data, userId) {
     }else {
       exterior = '';
     }
-    var name = descriptionData.market_name;
+    var name = descriptionData.market_hash_name;
     if (name.includes('Graffiti') && !name.includes('Sealed')) {
       name = 'Sealed ' + name;
     }

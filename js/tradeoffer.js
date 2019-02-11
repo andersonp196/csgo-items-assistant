@@ -41,7 +41,7 @@ async function stack() {
                   }catch(err) {
                     document.getElementById('hiddenDiv').innerText += null + ',';
                   }
-                  document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.market_name + ','
+                  document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.market_hash_name + ','
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.type + ','
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.icon_url`);
         var itemInfo = document.getElementById('hiddenDiv').innerText.split(',');
@@ -147,8 +147,6 @@ async function stack() {
 
   await loadIcons();
 
-  //show inventory box again
-  document.getElementsByClassName('trade_box_contents')[0].style.opacity = '100';
   return 'done';
 }
 
@@ -350,9 +348,6 @@ function addDOMElements() {
 var itemPriceData = null,
     options = {};
 async function start() {
-  //hide inventory box
-  document.getElementsByClassName('trade_box_contents')[0].style.opacity = '0';
-
   //go to csgo inventory
   await pageCode('TradePageSelectInventory(UserYou, 730, 2)');
 
@@ -445,7 +440,7 @@ async function start() {
         for (var i = 0; i < tradeItems.length; i++) {
           if (tradeItems[i] !== null) {
             if (tradeItems[i].parentNode.querySelector('p.price') == null) {
-              await pageCode(`document.getElementById('hiddenDiv').innerText = document.getElementById('${tradeItems[i].id}').rgItem.market_name`);
+              await pageCode(`document.getElementById('hiddenDiv').innerText = document.getElementById('${tradeItems[i].id}').rgItem.market_hash_name`);
               var marketName = document.getElementById('hiddenDiv').innerText;
               try {
                 var priceOptions = Object.keys(itemPriceData.items_list[marketName].price);
