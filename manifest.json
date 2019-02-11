@@ -2,7 +2,7 @@
   "name": "CSGO Items Assistant",
   "short_name": "CIA",
   "description": "An extension to help with CSGO trading.",
-  "homepage_rul": "https://github.com/andersonp196/csgo-items-assistant",
+  "homepage_url": "https://github.com/andersonp196/csgo-items-assistant",
   "version": "1.0.2",
   "manifest_version": 2,
   "background": {
@@ -37,9 +37,9 @@
     "storage",
     "unlimitedStorage",
     "webRequest",
+    "*://steamcommunity.com/*",
     "https://csgobackpack.net/",
-    "https://api.csgofloat.com/",
-    "*://steamcommunity.com/*"
+    "https://api.csgofloat.com/"
   ],
   "browser_action": {
     "default_icon": {
