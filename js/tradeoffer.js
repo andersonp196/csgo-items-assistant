@@ -101,7 +101,7 @@ async function stack() {
               }else {
                 price = 'error';
               }
-              
+
               var p2 = document.createElement('p');
               p2.classList.add('price');
               var color;
@@ -190,7 +190,6 @@ async function addItems(numToAdd) {
   }
 
   for (var i = 0; i < total; i++) {
-    console.log(itemIds[i]);
     await pageCode("MoveItemToTrade(document.querySelector('#" + itemIds[i] + "').parentNode)");
     //await sleep(25);
   }
@@ -277,7 +276,7 @@ async function loadIcons() {
   //filter items to load all icons
   await pageCode(`Filter.ApplyFilter('case')`);
   await sleep(10);
-  await pageCode(`Filter.ApplyFilter('')`);
+  await pageCode(`Filter.ClearFilter()`);
   await sleep(10);
   return 'done';
 }
@@ -364,8 +363,8 @@ async function start() {
   }
 
   addDOMElements();
-  trade();
   await loadIcons();
+  await trade();
   await stack();
 
   //check all items and make sure they have an icon if their count is > 0
@@ -423,81 +422,53 @@ async function start() {
         }
       }
     }
+
+    //get total of your added items
+    var yourItems = document.getElementById('your_slots').querySelectorAll('div.trade_slot');
+    var yourTotal = 0;
+    for(var i = 0; i < yourItems.length; i++) {
+
+    }
+    //get total of their added items
+    //append totals
+    document.getElementById('yourTotal').innerText =
+    document.getElementById('theirTotal').innerText =
   }, 100);
 }
 start();
 
-
-//----------------------------------------- pricing ----------------------------
-async function priceThisTrade() {
-  var btn = document.getElementById('priceTradeBtn');
-  btn.innerText = 'Working...';
-  btn.style.backgroundColor = '#7ffb7f'
-
-  await loadIcons();
-
-  var inventories = document.querySelectorAll('div.inventory_ctn');
-  for (var i = 0; i < inventories.length; i++) {
-    var total = 0;
-    var items = inventories[i].querySelectorAll('div.item');
-
-    for (var j = 0; j < items.length; j++) {
-      var itemLink = `document.getElementById('${items[j].id}')`;
-      await pageCode(`try {
-                  document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.actions[0].link + ',';
-                }catch(err) {
-                  document.getElementById('hiddenDiv').innerText += null + ',';
-                }
-                document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.market_name`);
-      var itemInfo = document.getElementById('hiddenDiv').innerText.split(',');
-
-    }
-
-    if (items.length > 0 && btn.parentNode.querySelectorAll('span').length < 2) {
-      var s = document.createElement('span');
-      s.innerHTML = '$' + total.toFixed(2);
-      s.style = 'color: green;';
-      btn.parentNode.append(s);
-
-      s = document.createElement('span');
-      s.innerHTML = ' for ';
-      s.style = 'color: #7884c5;';
-      btn.parentNode.append(s);
-    }else if (items.length > 0) {
-      var s = document.createElement('span');
-      s.innerHTML = '$' + total.toFixed(2);
-      s.style = 'color: #c70000;';
-      btn.parentNode.append(s);
-    }
-    total = 0;
-  }
-  btn.style.display = 'none';
-}
-
 async function trade() {
-  chrome.storage.local.get(['itemPriceData'], function(result) {
+  chrome.storage.local.get(['itemPriceData'], async function(result) {
     itemPriceData = result.itemPriceData;
     if (itemPriceData == undefined) {
       console.log('itemPriceData needs to be acquired for the first time.');
-      updateItemData();
+      await updateItemData();
     }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (86400*1000)) {
       console.log('Need to update itemData.');
-      updateItemData();
+      await updateItemData();
     }else {
       console.log('itemData acquired from cache.');
     }
   });
 
-  var btn = document.createElement('button');
-  btn.innerText = 'Click to price trade';
-  btn.style = 'border: 1px solid black;background-color: #339433;';
-  btn.id = 'priceTradeBtn';
-  btn.addEventListener('click', function() {
-    if (itemPriceData !== null) {
-      priceThisTrade();
-    }else {
-      alert('Wait a bit for item prices data to load');
-    }
-  });
-  document.getElementsByClassName('tutorial_arrow_ctn')[0].append(btn);
+  var place = document.getElementsByClassName('tutorial_arrow_ctn')[0];
+
+  var s = document.createElement('span');
+  s.innerText = '$0.00';
+  s.id = 'yourTotal';
+  s.style = 'color: green;';
+  place.append(s);
+
+  s = document.createElement('span');
+  s.innerText = ' for ';
+  s.style = 'color: #7884c5;';
+  place.append(s);
+
+  s = document.createElement('span');
+  s.innerText = '$0.00';
+  s.id = 'theirTotal';
+  s.style = 'color: #c70000;';
+  place.append(s);
+
+  return 'done';
 }

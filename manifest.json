@@ -15,7 +15,7 @@
       "js": ["js/util.js", "js/tradeoffers.js"]
     },
     {
-      "matches": ["*://*.steamcommunity.com/id/*/inventory/*"],
+      "matches": ["*://*.steamcommunity.com/id/*/inventory/*", "*://*.steamcommunity.com/profiles/*/inventory/*"],
       "run_at" : "document_idle",
       "js": ["js/util.js", "js/inventory.js"]
     },

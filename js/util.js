@@ -18,6 +18,7 @@ async function updateItemData() {
     });
   }
   x.send();
+  return 'done';
 }
 
 function pageCode(code) {
@@ -38,6 +39,6 @@ function pageCode(code) {
   script.id = 'customScript';
   var code = document.createTextNode('(function() {' + code + '})();');
   script.appendChild(code);
-  document.body.appendChild(script);
+  (document.body || document.head).appendChild(script);
   return 'done';
 }

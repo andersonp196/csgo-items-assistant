@@ -12,7 +12,9 @@ This is a browser extension (google chrome) that helps with csgo item pricing wh
 
 ### Current Functionality
 - Inventory
-  - a
+  - Button to get float and screenshot of item
+  - Easily see exterior of items
+  - Show average market price over last week of items
 - Market
   - Button to get float and screenshot of item
   - Button to do that for all items on page
@@ -29,8 +31,12 @@ This is a browser extension (google chrome) that helps with csgo item pricing wh
 - Please try reloading the page a few times if the extension isn't working. For some reason that fixes things sometimes.
 
 ##### Todo
+- Doppler phases in inventory and tradeoffer (market?)
+- icon if item isn't tradable in inventory
+- add link to market items on item (including ST and souveneir) in inventory
+- change border around items if they are ST or souveneir (inventory and tradeoffer)
 - Add a total price for each side of offer that updates (updates within the interval function)
 - fix tradeoffer search being broken (add all keys to trade then remove them and try searching 'key' again)
 - add data stashing for the market so floats will stay with listings until page is reloaded
-- add floats within page
-- load inventory differently with JSON
+- option to load floats in inventory and trades or not
+- add option to select currency
