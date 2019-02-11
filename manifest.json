@@ -2,30 +2,31 @@
   "name": "CSGO Items Assistant",
   "short_name": "CIA",
   "description": "An extension to help with CSGO trading.",
-  "version": "1.0.0",
+  "homepage_rul": "https://github.com/andersonp196/csgo-items-assistant",
+  "version": "1.0.2",
   "manifest_version": 2,
   "background": {
-    "scripts": ["js/util.js", "js/background.js"],
+    "scripts": ["js/background.js"],
     "persistent": true
   },
   "content_scripts": [
     {
-      "matches": ["*://*.steamcommunity.com/tradeoffer/*"],
+      "matches": ["*://steamcommunity.com/tradeoffer/*"],
       "run_at" : "document_idle",
       "js": ["js/util.js", "js/tradeoffer.js"]
     },
     {
-      "matches": ["*://*.steamcommunity.com/id/*/tradeoffers/*"],
+      "matches": ["*://steamcommunity.com/id/*/tradeoffers/*"],
       "run_at" : "document_idle",
       "js": ["js/util.js", "js/tradeoffers.js"]
     },
     {
-      "matches": ["*://*.steamcommunity.com/id/*/inventory/*", "*://*.steamcommunity.com/profiles/*/inventory/*"],
+      "matches": ["*://steamcommunity.com/id/*/inventory/*", "*://steamcommunity.com/profiles/*/inventory/*"],
       "run_at" : "document_idle",
       "js": ["js/util.js", "js/inventory.js"]
     },
     {
-      "matches": ["*://*.steamcommunity.com/market/listings/730/*"],
+      "matches": ["*://steamcommunity.com/market/listings/730/*"],
       "run_at" : "document_idle",
       "js": ["js/util.js", "js/market.js"]
     }
@@ -36,9 +37,9 @@
     "storage",
     "unlimitedStorage",
     "webRequest",
-    "*://*.steamcommunity.com/*",
     "https://csgobackpack.net/",
-    "https://api.csgofloat.com/"
+    "https://api.csgofloat.com/",
+    "*://steamcommunity.com/*"
   ],
   "browser_action": {
     "default_icon": {
@@ -49,7 +50,9 @@
   },
   "icons": {
     "16": "images/icon16.png",
+    "32": "images/icon32.png",
     "48": "images/icon48.png",
+    "64": "images/icon64.png",
     "128": "images/icon128.png"
   }
 }
