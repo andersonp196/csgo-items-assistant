@@ -1,6 +1,32 @@
-var itemPriceData = null;
+var itemPriceData = null,
+    options = {};
+
 async function start() {
-  chrome.storage.local.get(['itemPriceData'], async function(result) {
+  chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices'], function(result) {
+    if (result.inventorySS) {
+      options.inventorySS = true;
+    }else {
+      options.inventorySS = false;
+    }
+    if (result.inventoryExt) {
+      options.inventoryExt = true;
+    }else {
+      options.inventoryExt = false;
+    }
+    if (result.inventoryFloats) {
+      options.inventoryFloats = true;
+    }else {
+      options.inventoryFloats = false;
+    }
+    if (result.inventoryPrices) {
+      options.inventoryPrices = true;
+    }else {
+      options.inventoryPrices = false;
+    }
+  });
+
+
+  chrome.storage.local.get('itemPriceData', async function(result) {
     itemPriceData = result.itemPriceData;
     if (itemPriceData == undefined) {
       console.log('itemPriceData needs to be acquired for the first time.');
@@ -120,12 +146,14 @@ async function sortData(itemData, data, userId) {
   for (var i = 0; i < itemData.length; i++) {
     itemHolders[itemData[i].pos-1].style.position = 'relative';
 
-    var p = document.createElement('p');
-    p.innerText = itemData[i].exterior;
-    p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 2%; left: 5%; z-index: 4; color: #c44610;';
-    itemHolders[itemData[i].pos-1].append(p);
+    if (options.inventoryExt) {
+      var p = document.createElement('p');
+      p.innerText = itemData[i].exterior;
+      p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 2%; left: 5%; z-index: 4; color: #c44610;';
+      itemHolders[itemData[i].pos-1].append(p);
+    }
 
-    if (!itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
+    if (options.inventorySS && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
       var a = document.createElement('a');
       a.innerText = 'Click for SS';
       a.style = 'text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
@@ -134,7 +162,7 @@ async function sortData(itemData, data, userId) {
       itemHolders[itemData[i].pos-1].append(a);
     }
 
-    if (itemData[i].price != 'error') {
+    if (options.inventoryPrices && itemData[i].price != 'error') {
       var p2 = document.createElement('p');
       p2.innerText = '$' + itemData[i].price;
       p2.style = 'font-size: 14px; position: absolute; margin: 0; bottom: 2%; right: 5%; z-index: 4; color: #daa429;';
@@ -142,30 +170,31 @@ async function sortData(itemData, data, userId) {
     }
   }
 
-  function floats(link, index) {
-    var x = new XMLHttpRequest();
-    x.open('GET', link, true);
-    x.onload = async function() {
-      var wear = JSON.parse(this.response).iteminfo.floatvalue;
-      if (wear !== 0) {
-        var p = document.createElement('p');
-        p.innerText = String(wear.toFixed(10));
-        p.style = 'font-size: 14px; position: absolute; text-align: center; margin: 0; bottom: 60%; left: 50%; transform: translate(-50%, -50%); z-index: 4; width: 100%; font-weight: 600;background-color: black; color: #bdc6ff;';
-        itemHolders[index-1].append(p);
+  if (options.inventoryFloats) {
+    function floats(link, index) {
+      var x = new XMLHttpRequest();
+      x.open('GET', link, true);
+      x.onload = async function() {
+        var wear = JSON.parse(this.response).iteminfo.floatvalue;
+        if (wear !== 0) {
+          var p = document.createElement('p');
+          p.innerText = String(wear.toFixed(10));
+          p.style = 'font-size: 14px; position: absolute; text-align: center; margin: 0; bottom: 60%; left: 50%; transform: translate(-50%, -50%); z-index: 4; width: 100%; font-weight: 600;background-color: black; color: #bdc6ff;';
+          itemHolders[index-1].append(p);
+        }
       }
+      x.send();
     }
-    x.send();
-  }
 
-  var usedLinks = [];
-  for (var i = 0; i < itemData.length; i++) {
-    var link = 'https://api.csgofloat.com/?url=' + itemData[i].inspect;
-    console.log(itemData[i].inspect);
-    if (!usedLinks.includes(link) && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
-      var index = itemData[i].pos;
-      floats(link, index);
-      usedLinks.push(link);
-      await sleep(500);
+    var usedLinks = [];
+    for (var i = 0; i < itemData.length; i++) {
+      var link = 'https://api.csgofloat.com/?url=' + itemData[i].inspect;
+      if (!usedLinks.includes(link) && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
+        var index = itemData[i].pos;
+        floats(link, index);
+        usedLinks.push(link);
+        await sleep(500);
+      }
     }
   }
 }

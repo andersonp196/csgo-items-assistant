@@ -1,8 +1,12 @@
 {
   "name": "CSGO Items Assistant",
-  "description": "An extension meant to help.",
-  "version": "1.0",
+  "description": "An extension to help with CSGO trading.",
+  "version": "1.0.0",
   "manifest_version": 2,
+  "background": {
+    "scripts": ["js/util.js", "js/background.js"],
+    "persistent": true
+  },
   "content_scripts": [
     {
       "matches": ["*://*.steamcommunity.com/tradeoffer/*"],
@@ -36,6 +40,15 @@
     "https://api.csgofloat.com/"
   ],
   "browser_action": {
+    "default_icon": {
+      "19": "images/icon19.png",
+      "38": "images/icon38.png"
+    },
     "default_popup": "html/popup.html"
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
   }
 }

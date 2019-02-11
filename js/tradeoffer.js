@@ -51,7 +51,7 @@ async function stack() {
         d.style.display = 'none';
         items[j].append(d);
 
-        if (used.includes(itemInfo[1]) && (itemInfo[2].includes('Key') || itemInfo[2].includes('Container') || itemInfo[2].includes('Graffiti') || itemInfo[2].includes('Sticker'))) {
+        if (options.tradeStacking && used.includes(itemInfo[1]) && (itemInfo[2].includes('Key') || itemInfo[2].includes('Container') || itemInfo[2].includes('Graffiti') || itemInfo[2].includes('Sticker'))) {
           //item is duplicate
           var index = data.findIndex(function(item) {
             return item.html.querySelector('div.itemInfo').innerText.split(',')[1] == itemInfo[1];
@@ -79,49 +79,53 @@ async function stack() {
         if (curItem !== undefined) {
           var currItemInfo = curItem.html.querySelector('div.itemInfo').innerText.split(',');
           if (curItem !== undefined) {
+
             var p = document.createElement('p');
             p.innerHTML = String(curItem.count);
             p.classList.add('count');
-            if (curItem.count > 1) {
+            if (options.tradeStacking && curItem.count > 1) {
               p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #ff7d00;';
             }else {
               p.style = 'font-size: 14px;position: absolute;margin: 0;top: 75%;left: 80%;z-index: 4;color: #ff7d00;display: none;';
             }
             curItem.html.append(p);
 
-            try {
-              var priceOptions = Object.keys(itemPriceData.items_list[currItemInfo[1]].price);
-              var price;
-              if (priceOptions.includes('7_days')) {
-                price = itemPriceData.items_list[currItemInfo[1]].price['7_days'].average;
-              }else if (priceOptions.includes('30_days')) {
-                price = itemPriceData.items_list[currItemInfo[1]].price['30_days'].average;
-              }else if (priceOptions.includes('all_time')) {
-                price = itemPriceData.items_list[currItemInfo[1]].price['all_time'].average;
-              }else {
-                price = 'error';
-              }
 
-              var p2 = document.createElement('p');
-              p2.classList.add('price');
-              var color;
-              if (price != 'error') {
-                p2.innerText = '$' + price;
-                color = '#daa429';
-              }else {
-                p2.innerText = price;
-                color = 'yellow';
+            if (options.tradePrices) {
+              try {
+                var priceOptions = Object.keys(itemPriceData.items_list[currItemInfo[1]].price);
+                var price;
+                if (priceOptions.includes('7_days')) {
+                  price = itemPriceData.items_list[currItemInfo[1]].price['7_days'].average;
+                }else if (priceOptions.includes('30_days')) {
+                  price = itemPriceData.items_list[currItemInfo[1]].price['30_days'].average;
+                }else if (priceOptions.includes('all_time')) {
+                  price = itemPriceData.items_list[currItemInfo[1]].price['all_time'].average;
+                }else {
+                  price = 'error';
+                }
+
+                var p2 = document.createElement('p');
+                p2.classList.add('price');
+                var color;
+                if (price != 'error') {
+                  p2.innerText = '$' + price;
+                  color = '#daa429';
+                }else {
+                  p2.innerText = price;
+                  color = 'yellow';
+                }
+                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
+                curItem.html.append(p2);
+              }catch(err) {
+                var p2 = document.createElement('p');
+                p.innerHTML = 'error';
+                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
+                curItem.html.append(p2);
               }
-              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
-              curItem.html.append(p2);
-            }catch(err) {
-              var p2 = document.createElement('p');
-              p.innerHTML = 'error';
-              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
-              curItem.html.append(p2);
             }
 
-            if (currItemInfo[0] !== 'null' && !currItemInfo[2].includes('Sticker') && !currItemInfo[2].includes('Graffiti') && !currItemInfo[2].includes('Key') && !currItemInfo[2].includes('Container')) {
+            if (options.tradeSS && currItemInfo[0] !== 'null' && !currItemInfo[2].includes('Sticker') && !currItemInfo[2].includes('Graffiti') && !currItemInfo[2].includes('Key') && !currItemInfo[2].includes('Container')) {
               var a = document.createElement('a');
               a.innerText = 'Click for SS';
               a.style = 'appearance: button; -moz-appearance: button;-webkit-appearance: button;text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
@@ -343,7 +347,8 @@ function addDOMElements() {
   }
 }
 
-var itemPriceData = null;
+var itemPriceData = null,
+    options = {};
 async function start() {
   //hide inventory box
   document.getElementsByClassName('trade_box_contents')[0].style.opacity = '0';
@@ -375,158 +380,180 @@ async function start() {
   var lastInTrade = [0, 0];
   //check all items and make sure they have an icon if their count is > 0
   setInterval(async function() {
-    var items = document.querySelectorAll('div.itemHolder');
-    //going through all items
-    for (var i = 0; i < items.length; i++) {
-      //if item is not in trade
-      if (!items[i].classList.contains('trade_slot')) {
-        var duplicates = items[i].parentNode.parentNode.querySelector('div.duplicates');
-        var dupeItems = duplicates.querySelectorAll('div.item');
-        //first off, if there are more than 1 items in this div because they were removed from trade
-        if (items[i].querySelectorAll('img').length > 1) {
-          var allItems = items[i].querySelectorAll('div.item');
-          for (var j = 0; j < allItems.length; j++) {
-            if (j > 0) {
-              duplicates.append(allItems[j]);
-            }
-          }
-        }
-
-        var itemP = items[i].querySelector('p.count');
-        var itemInfo = items[i].querySelector('div.itemInfo');
-        //if item has <p> element and iteminfo div
-        if (itemInfo !== null && itemP !== null) {
-          var itemName = itemInfo.innerText.split(',')[1];
-          //if itemP is shown and thus item has duplicates
-          if (itemP.style.display !== 'none') {
-            //counting total of this item
-            var total = 0;
-            //if the item is in the itemholder we're looking at add to total
-            if (items[i].querySelectorAll('img').length > 0) {
-              total++;
-            }
-            //going through duplicates to add to total
-            for (var j = 0; j < dupeItems.length; j++) {
-              var dupeName = dupeItems[j].parentNode.querySelector('div.itemInfo').innerText.split(',')[1];
-              //if duplicate is the same item as item we are looking at
-              if (dupeName == itemName) {
-                //add to total
-                total++;
-                //if item we are looking at does not have any img and thus has already been added to trade
-                if (items[i].querySelectorAll('img').length == 0) {
-                  //add the next duplicate in line to the div of the item we are looking at
-                  items[i].append(dupeItems[j]);
-                }
+    if (options.tradeStacking) {
+      var items = document.querySelectorAll('div.itemHolder');
+      //going through all items
+      for (var i = 0; i < items.length; i++) {
+        //if item is not in trade
+        if (!items[i].classList.contains('trade_slot')) {
+          var duplicates = items[i].parentNode.parentNode.querySelector('div.duplicates');
+          var dupeItems = duplicates.querySelectorAll('div.item');
+          //first off, if there are more than 1 items in this div because they were removed from trade
+          if (items[i].querySelectorAll('img').length > 1) {
+            var allItems = items[i].querySelectorAll('div.item');
+            for (var j = 0; j < allItems.length; j++) {
+              if (j > 0) {
+                duplicates.append(allItems[j]);
               }
             }
-            //set <p> to proper total of items that are not in trade
-            if (items[i].querySelector('p.count').innerText !== String(total)) {
-              items[i].querySelector('p.count').innerText = String(total);
+          }
+
+          var itemP = items[i].querySelector('p.count');
+          var itemInfo = items[i].querySelector('div.itemInfo');
+          //if item has <p> element and iteminfo div
+          if (itemInfo !== null && itemP !== null) {
+            var itemName = itemInfo.innerText.split(',')[1];
+            //if itemP is shown and thus item has duplicates
+            if (itemP.style.display !== 'none') {
+              //counting total of this item
+              var total = 0;
+              //if the item is in the itemholder we're looking at add to total
+              if (items[i].querySelectorAll('img').length > 0) {
+                total++;
+              }
+              //going through duplicates to add to total
+              for (var j = 0; j < dupeItems.length; j++) {
+                var dupeName = dupeItems[j].parentNode.querySelector('div.itemInfo').innerText.split(',')[1];
+                //if duplicate is the same item as item we are looking at
+                if (dupeName == itemName) {
+                  //add to total
+                  total++;
+                  //if item we are looking at does not have any img and thus has already been added to trade
+                  if (items[i].querySelectorAll('img').length == 0) {
+                    //add the next duplicate in line to the div of the item we are looking at
+                    items[i].append(dupeItems[j]);
+                  }
+                }
+              }
+              //set <p> to proper total of items that are not in trade
+              if (items[i].querySelector('p.count').innerText !== String(total)) {
+                items[i].querySelector('p.count').innerText = String(total);
+              }
+              total = 0;
             }
-            total = 0;
           }
         }
       }
     }
 
     //prices in trade
-    var tradeItems = document.getElementsByClassName('trade_box_contents')[1].querySelectorAll('div.item');
-    if (document.getElementById('your_slots').querySelectorAll('div.item').length !== lastInTrade[0] || document.getElementById('their_slots').querySelectorAll('div.item').length !== lastInTrade[1]) {
-      lastInTrade = [document.getElementById('your_slots').querySelectorAll('div.item').length, document.getElementById('their_slots').querySelectorAll('div.item').length];
-      var totals = {yours: 0, theirs: 0};
-      for (var i = 0; i < tradeItems.length; i++) {
-        if (tradeItems[i] !== null) {
-          if (tradeItems[i].parentNode.querySelector('p.price') == null) {
-            await pageCode(`document.getElementById('hiddenDiv').innerText = document.getElementById('${tradeItems[i].id}').rgItem.market_name`);
-            var marketName = document.getElementById('hiddenDiv').innerText;
-            try {
-              var priceOptions = Object.keys(itemPriceData.items_list[marketName].price);
-              var price;
-              if (priceOptions.includes('7_days')) {
-                price = itemPriceData.items_list[marketName].price['7_days'].average;
-              }else if (priceOptions.includes('30_days')) {
-                price = itemPriceData.items_list[marketName].price['30_days'].average;
-              }else if (priceOptions.includes('all_time')) {
-                price = itemPriceData.items_list[marketName].price['all_time'].average;
-              }else {
-                price = 'error';
-              }
+    if (options.tradePrices) {
+      var tradeItems = document.getElementsByClassName('trade_box_contents')[1].querySelectorAll('div.item');
+      if (document.getElementById('your_slots').querySelectorAll('div.item').length !== lastInTrade[0] || document.getElementById('their_slots').querySelectorAll('div.item').length !== lastInTrade[1]) {
+        lastInTrade = [document.getElementById('your_slots').querySelectorAll('div.item').length, document.getElementById('their_slots').querySelectorAll('div.item').length];
+        var totals = {yours: 0, theirs: 0};
+        for (var i = 0; i < tradeItems.length; i++) {
+          if (tradeItems[i] !== null) {
+            if (tradeItems[i].parentNode.querySelector('p.price') == null) {
+              await pageCode(`document.getElementById('hiddenDiv').innerText = document.getElementById('${tradeItems[i].id}').rgItem.market_name`);
+              var marketName = document.getElementById('hiddenDiv').innerText;
+              try {
+                var priceOptions = Object.keys(itemPriceData.items_list[marketName].price);
+                var price;
+                if (priceOptions.includes('7_days')) {
+                  price = itemPriceData.items_list[marketName].price['7_days'].average;
+                }else if (priceOptions.includes('30_days')) {
+                  price = itemPriceData.items_list[marketName].price['30_days'].average;
+                }else if (priceOptions.includes('all_time')) {
+                  price = itemPriceData.items_list[marketName].price['all_time'].average;
+                }else {
+                  price = 'error';
+                }
 
-              if (tradeItems[i].parentNode.parentNode.id.includes('your') && price !== 'error') {
-                console.log(totals);
-                console.log('price: ' + price);
-                totals.yours += price;
+                if (tradeItems[i].parentNode.parentNode.id.includes('your') && price !== 'error') {
+                  totals.yours += price;
+                }else if (tradeItems[i].parentNode.parentNode.id.includes('their') && price !== 'error'){
+                  totals.theirs += price;
+                }
+
+                var p2 = document.createElement('p');
+                p2.classList.add('price');
+                var color;
+                if (price != 'error') {
+                  p2.innerText = '$' + price;
+                  color = '#daa429';
+                }else {
+                  p2.innerText = price;
+                  color = 'yellow';
+                }
+                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
+                tradeItems[i].parentNode.append(p2);
+              }catch(err) {
+                var p2 = document.createElement('p');
+                p.innerHTML = 'error';
+                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
+                tradeItems[i].parentNode.append(p2);
+              }
+            }else {
+              if (tradeItems[i].parentNode.parentNode.id.includes('your') && tradeItems[i].parentNode.querySelector('p.price').innerText !== 'error') {
+                totals.yours += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
               }else if (tradeItems[i].parentNode.parentNode.id.includes('their') && price !== 'error'){
-                totals.theirs += price;
+                totals.theirs += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
               }
-
-              var p2 = document.createElement('p');
-              p2.classList.add('price');
-              var color;
-              if (price != 'error') {
-                p2.innerText = '$' + price;
-                color = '#daa429';
-              }else {
-                p2.innerText = price;
-                color = 'yellow';
-              }
-              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
-              tradeItems[i].parentNode.append(p2);
-            }catch(err) {
-              var p2 = document.createElement('p');
-              p.innerHTML = 'error';
-              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
-              tradeItems[i].parentNode.append(p2);
-            }
-          }else {
-            if (tradeItems[i].parentNode.parentNode.id.includes('your') && tradeItems[i].parentNode.querySelector('p.price').innerText !== 'error') {
-              totals.yours += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
-            }else if (tradeItems[i].parentNode.parentNode.id.includes('their') && price !== 'error'){
-              totals.theirs += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
             }
           }
         }
+        document.getElementById('yourTotal').innerText = String(totals.yours.toFixed(2));
+        document.getElementById('theirTotal').innerText = String(totals.theirs.toFixed(2));
       }
-      document.getElementById('yourTotal').innerText = String(totals.yours.toFixed(2));
-      document.getElementById('theirTotal').innerText = String(totals.theirs.toFixed(2));
     }
   }, 200);
 }
 
 async function trade() {
-  chrome.storage.local.get(['itemPriceData'], async function(result) {
-    itemPriceData = result.itemPriceData;
-    if (itemPriceData == undefined) {
-      console.log('itemPriceData needs to be acquired for the first time.');
-      await updateItemData();
-    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (86400*1000)) {
-      console.log('Need to update itemData.');
-      await updateItemData();
+  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices'], function(result) {
+    if (result.tradeStacking) {
+      options.tradeStacking = true;
     }else {
-      console.log('itemData acquired from cache.');
+      options.tradeStacking = false;
     }
+    if (result.tradeSS) {
+      options.tradeSS = true;
+    }else {
+      options.tradeSS = false;
+    }
+    if (result.tradePrices) {
+      options.tradePrices = true;
+    }else {
+      options.tradePrices = false;
+    }
+
+    if (options.tradePrices) {
+      chrome.storage.local.get('itemPriceData', async function(result) {
+        itemPriceData = result.itemPriceData;
+        if (itemPriceData == undefined) {
+          console.log('itemPriceData needs to be acquired for the first time.');
+          await updateItemData();
+        }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (86400*1000)) {
+          console.log('Need to update itemData.');
+          await updateItemData();
+        }else {
+          console.log('itemData acquired from cache.');
+        }
+      });
+
+      var place = document.getElementsByClassName('tutorial_arrow_ctn')[0];
+
+      var s = document.createElement('span');
+      s.innerText = '$0.00';
+      s.id = 'yourTotal';
+      s.style = 'color: green; font-size: 16px;';
+      place.append(s);
+
+      s = document.createElement('span');
+      s.innerText = ' for ';
+      s.style = 'color: #7884c5; font-size: 14px;';
+      place.append(s);
+
+      s = document.createElement('span');
+      s.innerText = '$0.00';
+      s.id = 'theirTotal';
+      s.style = 'color: #c70000; font-size: 16px;';
+      place.append(s);
+    }
+
+    start();
   });
-
-  var place = document.getElementsByClassName('tutorial_arrow_ctn')[0];
-
-  var s = document.createElement('span');
-  s.innerText = '$0.00';
-  s.id = 'yourTotal';
-  s.style = 'color: green;';
-  place.append(s);
-
-  s = document.createElement('span');
-  s.innerText = ' for ';
-  s.style = 'color: #7884c5;';
-  place.append(s);
-
-  s = document.createElement('span');
-  s.innerText = '$0.00';
-  s.id = 'theirTotal';
-  s.style = 'color: #c70000;';
-  place.append(s);
-
-  start();
 }
 
 function veryStart() {
