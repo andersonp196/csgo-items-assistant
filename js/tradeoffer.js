@@ -142,6 +142,9 @@ async function stack() {
   }
 
   await loadIcons();
+
+  //show inventory box again
+  document.getElementsByClassName('trade_box_contents')[0].style.opacity = '100';
   return 'done';
 }
 
@@ -342,6 +345,9 @@ function addDOMElements() {
 
 var itemPriceData = null;
 async function start() {
+  //hide inventory box
+  document.getElementsByClassName('trade_box_contents')[0].style.opacity = '0';
+
   //go to csgo inventory
   await pageCode('TradePageSelectInventory(UserYou, 730, 2)');
 
@@ -364,11 +370,11 @@ async function start() {
 
   addDOMElements();
   await loadIcons();
-  await trade();
   await stack();
 
+  var lastInTrade = [0, 0];
   //check all items and make sure they have an icon if their count is > 0
-  setInterval(function() {
+  setInterval(async function() {
     var items = document.querySelectorAll('div.itemHolder');
     //going through all items
     for (var i = 0; i < items.length; i++) {
@@ -423,19 +429,69 @@ async function start() {
       }
     }
 
-    //get total of your added items
-    var yourItems = document.getElementById('your_slots').querySelectorAll('div.trade_slot');
-    var yourTotal = 0;
-    for(var i = 0; i < yourItems.length; i++) {
+    //prices in trade
+    var tradeItems = document.getElementsByClassName('trade_box_contents')[1].querySelectorAll('div.item');
+    if (document.getElementById('your_slots').querySelectorAll('div.item').length !== lastInTrade[0] || document.getElementById('their_slots').querySelectorAll('div.item').length !== lastInTrade[1]) {
+      lastInTrade = [document.getElementById('your_slots').querySelectorAll('div.item').length, document.getElementById('their_slots').querySelectorAll('div.item').length];
+      var totals = {yours: 0, theirs: 0};
+      for (var i = 0; i < tradeItems.length; i++) {
+        if (tradeItems[i] !== null) {
+          if (tradeItems[i].parentNode.querySelector('p.price') == null) {
+            await pageCode(`document.getElementById('hiddenDiv').innerText = document.getElementById('${tradeItems[i].id}').rgItem.market_name`);
+            var marketName = document.getElementById('hiddenDiv').innerText;
+            try {
+              var priceOptions = Object.keys(itemPriceData.items_list[marketName].price);
+              var price;
+              if (priceOptions.includes('7_days')) {
+                price = itemPriceData.items_list[marketName].price['7_days'].average;
+              }else if (priceOptions.includes('30_days')) {
+                price = itemPriceData.items_list[marketName].price['30_days'].average;
+              }else if (priceOptions.includes('all_time')) {
+                price = itemPriceData.items_list[marketName].price['all_time'].average;
+              }else {
+                price = 'error';
+              }
 
+              if (tradeItems[i].parentNode.parentNode.id.includes('your') && price !== 'error') {
+                console.log(totals);
+                console.log('price: ' + price);
+                totals.yours += price;
+              }else if (tradeItems[i].parentNode.parentNode.id.includes('their') && price !== 'error'){
+                totals.theirs += price;
+              }
+
+              var p2 = document.createElement('p');
+              p2.classList.add('price');
+              var color;
+              if (price != 'error') {
+                p2.innerText = '$' + price;
+                color = '#daa429';
+              }else {
+                p2.innerText = price;
+                color = 'yellow';
+              }
+              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
+              tradeItems[i].parentNode.append(p2);
+            }catch(err) {
+              var p2 = document.createElement('p');
+              p.innerHTML = 'error';
+              p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
+              tradeItems[i].parentNode.append(p2);
+            }
+          }else {
+            if (tradeItems[i].parentNode.parentNode.id.includes('your') && tradeItems[i].parentNode.querySelector('p.price').innerText !== 'error') {
+              totals.yours += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
+            }else if (tradeItems[i].parentNode.parentNode.id.includes('their') && price !== 'error'){
+              totals.theirs += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
+            }
+          }
+        }
+      }
+      document.getElementById('yourTotal').innerText = String(totals.yours.toFixed(2));
+      document.getElementById('theirTotal').innerText = String(totals.theirs.toFixed(2));
     }
-    //get total of their added items
-    //append totals
-    document.getElementById('yourTotal').innerText =
-    document.getElementById('theirTotal').innerText =
-  }, 100);
+  }, 200);
 }
-start();
 
 async function trade() {
   chrome.storage.local.get(['itemPriceData'], async function(result) {
@@ -470,5 +526,10 @@ async function trade() {
   s.style = 'color: #c70000;';
   place.append(s);
 
-  return 'done';
+  start();
 }
+
+function veryStart() {
+  trade();
+}
+veryStart();
