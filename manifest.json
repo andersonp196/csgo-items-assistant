@@ -36,7 +36,6 @@
     "activeTab",
     "storage",
     "unlimitedStorage",
-    "webRequest",
     "*://steamcommunity.com/*",
     "https://csgobackpack.net/",
     "https://api.csgofloat.com/"
