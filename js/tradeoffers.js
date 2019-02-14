@@ -1,8 +1,14 @@
-var itemPriceData = null;
+var itemPriceData = null,
+    options = {};
 async function start() {
+  chrome.storage.sync.get(['tradepageExteriors'], function(result) {
+    if (result.tradepageExteriors) {
+      options.tradepageExteriors = true;
+    }
+  });
+
   chrome.storage.local.get('itemPriceData', async function(result) {
     itemPriceData = result.itemPriceData;
-    console.log(itemPriceData);
     if (itemPriceData == undefined) {
       console.log('itemPriceData needs to be acquired for the first time.');
       await updateitemPriceData();
@@ -39,7 +45,8 @@ async function priceTrade(btn) {
   var trade = document.getElementsByClassName('tradeoffer_items_ctn ')[index];
 
   var offers = trade.getElementsByClassName('tradeoffer_item_list');
-  var itemPrices = [];
+  var itemPrices = [],
+      itemExteriors = [];
 
   for (var i = 0; i < offers.length; i++) {
     var individualItems = offers[i].getElementsByClassName('trade_item');
@@ -49,6 +56,9 @@ async function priceTrade(btn) {
         response.text().then((text) => {
           var info = JSON.parse(text.match(/(?<='economy_item_[A-Za-z0-9]*',\s\s)(.*?)(?=,"descriptions")/g)[0] + '}');
           var skin = info.market_hash_name;
+          if (options.tradepageExteriors) {
+            itemExteriors.push(wearShortener(skin.split('(')[1].replace(')', '')));
+          }
           try {
             var priceOptions = Object.keys(itemPriceData.items_list[skin].price);
             var price;
@@ -75,6 +85,7 @@ async function priceTrade(btn) {
   while (!loaded) {
     if (itemPrices.length == trade.getElementsByClassName('trade_item').length) {
       console.log(itemPrices);
+      console.log(itemExteriors);
       loaded = true;
     }
     await sleep(100);
@@ -95,8 +106,15 @@ async function priceTrade(btn) {
         p.innerHTML = price;
         color = 'yellow';
       }
-      p.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);color: ' + color + ';';
+      p.style = 'position: absolute;top: 70%;left: 70%;transform: translate(-50%, -50%);color: ' + color + ';';
       individualItems[j].append(p);
+
+      if (options.tradepageExteriors) {
+        p = document.createElement('p');
+        p.innerText = itemExteriors[(i*indItems1)+j];
+        p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 2%; left: 5%; z-index: 4; color: #c44610;';
+        individualItems[j].append(p);
+      }
     }
 
     if (i%2 == 0) {

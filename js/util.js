@@ -8,12 +8,27 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function wearShortener(ext) {
+  if (ext == 'Factory New') {
+    return 'FN';
+  }else if (ext == 'Minimal Wear') {
+    return 'MW';
+  }else if (ext == 'Field-Tested') {
+    return 'FT';
+  }else if (ext == 'Well-Worn') {
+    return 'WW';
+  }else if (ext == 'Battle-Scarred') {
+    return 'BS';
+  }else {
+    return '';
+  }
+}
+
 async function updateitemPriceData() {
   var x = new XMLHttpRequest();
   x.open('GET', 'https://csgobackpack.net/api/GetItemsList/v2/?currency=USD&no_details=true', true);
   x.onload = function () {
     itemPriceData = JSON.parse(this.response);
-    console.log(itemPriceData);
     chrome.storage.local.set({itemPriceData: itemPriceData}, () => {
       console.log('Reacquired itemPriceData.');
     });

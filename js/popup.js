@@ -1,5 +1,4 @@
-chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'tradeStacking', 'tradeSS', 'tradePrices'], function(result) {
-  console.log(result);
+chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradepageExteriors'], function(result) {
   if (result.inventorySS) {
     document.getElementById('inventorySS').click();
   }
@@ -20,6 +19,9 @@ chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inve
   }
   if (result.tradePrices) {
     document.getElementById('tradePrices').click();
+  }
+  if (result.tradepageExteriors) {
+    document.getElementById('tradepageExteriors').click();
   }
 });
 
@@ -76,5 +78,13 @@ document.getElementById('tradePrices').addEventListener('click', function() {
     chrome.storage.sync.set({tradePrices: true}, function() {});
   }else {
     chrome.storage.sync.set({tradePrices: false}, function() {});
+  }
+});
+
+document.getElementById('tradepageExteriors').addEventListener('click', function() {
+  if (this.checked) {
+    chrome.storage.sync.set({tradepageExteriors: true}, function() {});
+  }else {
+    chrome.storage.sync.set({tradepageExteriors: false}, function() {});
   }
 });

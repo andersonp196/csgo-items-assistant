@@ -7,7 +7,8 @@ chrome.runtime.onInstalled.addListener(function(details) {
       inventoryPrices: true,
       tradeStacking: true,
       tradeSS: true,
-      tradePrices: true
+      tradePrices: true,
+      tradepageExteriors: true
     }, function() {});
   }else if (details.reason === 'update') {
     //for now reset everything
@@ -18,7 +19,8 @@ chrome.runtime.onInstalled.addListener(function(details) {
       inventoryPrices: true,
       tradeStacking: true,
       tradeSS: true,
-      tradePrices: true
+      tradePrices: true,
+      tradepageExteriors: true
     }, function() {});
   }
 });

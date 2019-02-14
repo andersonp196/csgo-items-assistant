@@ -88,19 +88,8 @@ function dataLoaded(data, userId) {
     var descriptionData = data.rgDescriptions[classid + '_' + instanceid];
     var type = descriptionData.type;
     var ext = descriptionData.descriptions[0].value;
-    if (ext == 'Exterior: Factory New') {
-      exterior = 'FN';
-    }else if (ext == 'Exterior: Minimal Wear') {
-      exterior = 'MW';
-    }else if (ext == 'Exterior: Field-Tested') {
-      exterior = 'FT';
-    }else if (ext == 'Exterior: Well-Worn') {
-      exterior = 'WW';
-    }else if (ext == 'Exterior: Battle-Scarred') {
-      exterior = 'BS';
-    }else {
-      exterior = '';
-    }
+    var exterior = wearShortener(ext.replace('Exterior: '));
+    
     var name = descriptionData.market_hash_name;
     if (name.includes('Graffiti') && !name.includes('Sealed')) {
       name = 'Sealed ' + name;
