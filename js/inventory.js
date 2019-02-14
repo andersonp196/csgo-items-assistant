@@ -1,31 +1,4 @@
-var itemPriceData = null,
-    options = {};
-
-async function start() {
-  chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices'], function(result) {
-    if (result.inventorySS) {
-      options.inventorySS = true;
-    }else {
-      options.inventorySS = false;
-    }
-    if (result.inventoryExt) {
-      options.inventoryExt = true;
-    }else {
-      options.inventoryExt = false;
-    }
-    if (result.inventoryFloats) {
-      options.inventoryFloats = true;
-    }else {
-      options.inventoryFloats = false;
-    }
-    if (result.inventoryPrices) {
-      options.inventoryPrices = true;
-    }else {
-      options.inventoryPrices = false;
-    }
-  });
-
-
+async function getTheData() {
   chrome.storage.local.get('itemPriceData', async function(result) {
     itemPriceData = result.itemPriceData;
     if (itemPriceData == undefined) {
@@ -34,10 +7,34 @@ async function start() {
     }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
       console.log('Need to update itemPriceData.');
       await updateitemPriceData();
+    }else if (options.newCurr) {
+      console.log('Need to update itemPriceData with new currency.');
+      await updateitemPriceData();
     }else {
       console.log('itemPriceData acquired from cache.');
     }
   });
+}
+
+var itemPriceData = null,
+    options = {};
+async function start() {
+  chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'newCurr'], function(result) {
+    options.inventorySS = result.inventorySS;
+    options.inventoryExt = result.inventoryExt;
+    options.inventoryFloats = result.inventoryFloats;
+    options.inventoryPrices = result.inventoryPrices;
+    options.newCurr = result.newCurr;
+  });
+
+  var loaded = false;
+  while (!loaded) {
+    if (Object.keys(options).length > 0) {
+      getTheData();
+      loaded = true;
+    }
+    await sleep(100);
+  }
 
   await pageCode(`document.getElementById('hiddenDiv').innerText = g_ActiveInventory.m_steamid`);
   var userId = document.getElementById('hiddenDiv').innerText;
@@ -89,7 +86,7 @@ function dataLoaded(data, userId) {
     var type = descriptionData.type;
     var ext = descriptionData.descriptions[0].value;
     var exterior = wearShortener(ext.replace('Exterior: '));
-    
+
     var name = descriptionData.market_hash_name;
     if (name.includes('Graffiti') && !name.includes('Sealed')) {
       name = 'Sealed ' + name;
@@ -181,7 +178,7 @@ async function sortData(itemData, data, userId) {
     for (var i = 0; i < itemData.length; i++) {
       var link = 'https://api.csgofloat.com/?url=' + itemData[i].inspect;
       if (!usedLinks.includes(link) && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti')) {
-        if (!itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible'))) {
+        if (!itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
           var index = itemData[i].pos;
           floats(link, index);
           usedLinks.push(link);

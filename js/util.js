@@ -25,16 +25,20 @@ function wearShortener(ext) {
 }
 
 async function updateitemPriceData() {
-  var x = new XMLHttpRequest();
-  x.open('GET', 'https://csgobackpack.net/api/GetItemsList/v2/?currency=USD&no_details=true', true);
-  x.onload = function () {
-    itemPriceData = JSON.parse(this.response);
-    chrome.storage.local.set({itemPriceData: itemPriceData}, () => {
-      console.log('Reacquired itemPriceData.');
-    });
-  }
-  x.send();
-  return 'done';
+  chrome.storage.sync.get('currency', function(result) {
+    var currency = result.currency;
+    var x = new XMLHttpRequest();
+    x.open('GET', 'https://csgobackpack.net/api/GetItemsList/v2/?currency=' + currency + '&no_details=true', true);
+    x.onload = function () {
+      itemPriceData = JSON.parse(this.response);
+      chrome.storage.local.set({itemPriceData: itemPriceData}, () => {
+        console.log('Reacquired itemPriceData.');
+        chrome.storage.sync.set({newCurr:false}, function() {});
+      });
+    }
+    x.send();
+    return 'done';
+  });
 }
 
 function pageCode(code) {

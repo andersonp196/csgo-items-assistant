@@ -495,37 +495,33 @@ async function start() {
   }, 200);
 }
 
+async function getTheData() {
+  chrome.storage.local.get('itemPriceData', async function(result) {
+    itemPriceData = result.itemPriceData;
+    if (itemPriceData == undefined) {
+      console.log('itemPriceData needs to be acquired for the first time.');
+      await updateitemPriceData();
+    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
+      console.log('Need to update itemPriceData.');
+      await updateitemPriceData();
+    }else if (options.newCurr) {
+      console.log('Need to update itemPriceData with new currency.');
+      await updateitemPriceData();
+    }else {
+      console.log('itemPriceData acquired from cache.');
+    }
+  });
+}
+
 async function trade() {
-  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices'], function(result) {
-    if (result.tradeStacking) {
-      options.tradeStacking = true;
-    }else {
-      options.tradeStacking = false;
-    }
-    if (result.tradeSS) {
-      options.tradeSS = true;
-    }else {
-      options.tradeSS = false;
-    }
-    if (result.tradePrices) {
-      options.tradePrices = true;
-    }else {
-      options.tradePrices = false;
-    }
+  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices', 'newCurr'], function(result) {
+    options.tradeStacking = result.tradeStacking;
+    options.tradeSS = result.tradeSS;
+    options.tradePrices = result.tradePrices;
+    options.newCurr = result.newCurr;
 
     if (options.tradePrices) {
-      chrome.storage.local.get('itemPriceData', async function(result) {
-        itemPriceData = result.itemPriceData;
-        if (itemPriceData == undefined) {
-          console.log('itemPriceData needs to be acquired for the first time.');
-          await updateitemPriceData();
-        }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
-          console.log('Need to update itemPriceData.');
-          await updateitemPriceData();
-        }else {
-          console.log('itemPriceData acquired from cache.');
-        }
-      });
+      getTheData();
 
       var place = document.getElementsByClassName('tutorial_arrow_ctn')[0];
 

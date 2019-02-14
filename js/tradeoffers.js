@@ -1,12 +1,4 @@
-var itemPriceData = null,
-    options = {};
-async function start() {
-  chrome.storage.sync.get(['tradepageExteriors'], function(result) {
-    if (result.tradepageExteriors) {
-      options.tradepageExteriors = true;
-    }
-  });
-
+async function getTheData() {
   chrome.storage.local.get('itemPriceData', async function(result) {
     itemPriceData = result.itemPriceData;
     if (itemPriceData == undefined) {
@@ -15,10 +7,31 @@ async function start() {
     }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
       console.log('Need to update itemPriceData.');
       await updateitemPriceData();
+    }else if (options.newCurr) {
+      console.log('Need to update itemPriceData with new currency.');
+      await updateitemPriceData();
     }else {
       console.log('itemPriceData acquired from cache.');
     }
   });
+}
+
+var itemPriceData = null,
+    options = {};
+async function start() {
+  chrome.storage.sync.get(['tradepageExteriors', 'newCurr'], function(result) {
+    options.tradepageExteriors = result.tradepageExteriors;
+    options.newCurr = result.newCurr;
+  });
+
+  var loaded = false;
+  while (!loaded) {
+    if (Object.keys(options).length > 0) {
+      getTheData();
+      loaded = true;
+    }
+    await sleep(100);
+  }
 
   var trades = document.getElementsByClassName('tradeoffer');
   for (var i = 0; i < trades.length; i++) {

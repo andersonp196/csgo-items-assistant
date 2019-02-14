@@ -15,6 +15,7 @@ This is a chrome browser extension that helps with trading CSGO items.
 - Show prices of each item in a tradeoffer
 - Show total price of each side of trade in a tradeoffer
 - Get prices of all items in trade with totals for both sides of trade on the tradeoffers page
+- Show exteriors of items on tradeoffers page
 
 ### Common Errors
 - Please try reloading the page a few times if the extension isn't working. For some reason that fixes things sometimes.
