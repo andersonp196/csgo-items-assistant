@@ -1,27 +1,35 @@
-chrome.storage.local.get(['itemData'], function(result) {
-  itemData = result.itemData;
-  if (itemData == undefined) {
-    console.log('itemData needs to be acquired for the first time.');
-    updateItemData();
-  }else if ((new Date()).getTime()-(itemData.timestamp*1000) > (86400*1000)) {
-    console.log('Need to update itemData.');
-    updateItemData();
-  }else {
-    console.log('itemData acquired from cache.');
-  }
-});
-
-var trades = document.getElementsByClassName('tradeoffer');
-for (var i = 0; i < trades.length; i++) {
-  var btn = document.createElement('button');
-  btn.innerText = 'Click to price trade';
-  btn.id = 'priceTrade' + i;
-  btn.style = 'border: 1px solid black;background-color: #339433;';
-  btn.addEventListener('click', function() {
-    priceTrade(this);
+var itemPriceData = null;
+async function start() {
+  chrome.storage.local.get('itemPriceData', async function(result) {
+    itemPriceData = result.itemPriceData;
+    if (itemPriceData == undefined) {
+      console.log('itemPriceData needs to be acquired for the first time.');
+      await updateItemData();
+    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (86400*1000)) {
+      console.log('Need to update itemData.');
+      await updateItemData();
+    }else {
+      console.log('itemData acquired from cache.');
+    }
   });
-  trades[i].insertBefore(btn, trades[i].childNodes[0]);
+
+  var trades = document.getElementsByClassName('tradeoffer');
+  for (var i = 0; i < trades.length; i++) {
+    var btn = document.createElement('button');
+    btn.innerText = 'Click to price trade';
+    btn.id = 'priceTrade' + i;
+    btn.style = 'border: 1px solid black;background-color: #339433;';
+    btn.addEventListener('click', function() {
+      if (itemPriceData !== null) {
+        priceTrade(this);
+      }else {
+        alert('Wait a bit longer for pricedata to download.');
+      }
+    });
+    trades[i].insertBefore(btn, trades[i].childNodes[0]);
+  }
 }
+start();
 
 async function priceTrade(btn) {
   btn.innerText = 'Working...';
@@ -29,52 +37,63 @@ async function priceTrade(btn) {
   var index = Number(btn.id.replace('priceTrade', ''));
   var trade = document.getElementsByClassName('tradeoffer_items_ctn ')[index];
 
-  var total = 0;
   var offers = trade.getElementsByClassName('tradeoffer_item_list');
-  for (var items = 0; items < offers.length; items++) {
-    var individualItems = offers[items].getElementsByClassName('trade_item');
-    for (var individual = 0; individual < individualItems.length; individual++) {
-      var thisItem = individualItems[individual];
-      thisItem.dispatchEvent(event);
-      await sleep(350);
-      document.getElementsByClassName('economyitem_hover')[0].style.display = 'none';
-      try {
-        var skin = document.getElementsByClassName('hover_item_name')[0].innerText;
-        var ext = ' (' + document.getElementsByClassName('item_desc_descriptors')[0].getElementsByClassName('descriptor')[0].innerText + ')';
-        if (ext.includes('Exterior: ')) {
-          skin += ext.replace('Exterior: ', '');
-        }
-        var priceOptions = Object.keys(itemData.items_list[skin].price);
-        var price;
-        if (priceOptions.includes('7_days')) {
-          price = itemData.items_list[skin].price['7_days'].average;
-        }else if (priceOptions.includes('30_days')) {
-          price = itemData.items_list[skin].price['30_days'].average;
-        }else if (priceOptions.includes('all_time')) {
-          price = itemData.items_list[skin].price['all_time'].average;
-        }else {
-          price = 'error';
-        }
-        var p = document.createElement('p');
-        var color;
-        if (price != 'error') {
-          p.innerHTML = '$' + price;
-          total += price;
-          color = '#daa429';
-        }else {
-          p.innerHTML = price;
-          color = 'yellow';
-        }
-        p.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);color: ' + color + ';';
-        thisItem.append(p);
-      }catch(err) {
-        var p = document.createElement('p');
-        p.innerHTML = 'error';
-        p.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);color: yellow;';
-        thisItem.append(p);
-      }
+  var itemPrices = [];
+
+  for (var i = 0; i < offers.length; i++) {
+    var individualItems = offers[i].getElementsByClassName('trade_item');
+    for (var j = 0; j < individualItems.length; j++) {
+      var thisItem = individualItems[j];
+      fetch('https://steamcommunity.com/economy/itemclasshover' + thisItem.getAttribute('data-economy-item').replace('classinfo', '') + '?content_only=1&l=english').then(async (response) => {
+        response.text().then((text) => {
+          var info = JSON.parse(text.match(/(?<='economy_item_[A-Za-z0-9]*',\s\s)(.*?)(?=,"descriptions")/g)[0] + '}');
+          var skin = info.market_hash_name;
+
+          try {
+            var priceOptions = Object.keys(itemPriceData.items_list[skin].price);
+            var price;
+            if (priceOptions.includes('7_days')) {
+              price = itemPriceData.items_list[skin].price['7_days'].average;
+            }else if (priceOptions.includes('30_days')) {
+              price = itemPriceData.items_list[skin].price['30_days'].average;
+            }else if (priceOptions.includes('all_time')) {
+              price = itemPriceData.items_list[skin].price['all_time'].average;
+            }else {
+              price = 'error';
+            }
+          }catch(err) {
+            price = 'error';
+          }
+          itemPrices.push(price);
+        });
+        await sleep(100);
+      });
     }
-    if (items%2 == 0) {
+  }
+
+  await sleep(5000);
+  console.log(itemPrices);
+
+  var indItems1 = offers[0].getElementsByClassName('trade_item').length;
+  for (var i = 0; i < offers.length; i++) {
+    var individualItems = offers[i].getElementsByClassName('trade_item'),
+        total = 0;
+    for (var j = 0; j < individualItems.length; j++) {
+      var p = document.createElement('p');
+      var color;
+      if (itemPrices[(i*indItems1)+j] != 'error') {
+        p.innerHTML = '$' + itemPrices[(i*indItems1)+j];
+        total += itemPrices[(i*indItems1)+j];
+        color = '#daa429';
+      }else {
+        p.innerHTML = price;
+        color = 'yellow';
+      }
+      p.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);color: ' + color + ';';
+      individualItems[j].append(p);
+    }
+
+    if (i%2 == 0) {
       var s = document.createElement('span');
       s.innerHTML = '$' + total.toFixed(2);
       s.style = 'color: green;';
@@ -90,9 +109,8 @@ async function priceTrade(btn) {
       s.style = 'color: #c70000;';
       trade.parentNode.getElementsByClassName('tradeoffer_header')[0].append(s);
     }
-    total = 0;
   }
+
   await sleep(200);
-  document.getElementsByClassName('tradeoffer_footer')[index].click();
   btn.style.display = 'none';
 }
