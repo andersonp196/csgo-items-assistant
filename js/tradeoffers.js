@@ -2,14 +2,15 @@ var itemPriceData = null;
 async function start() {
   chrome.storage.local.get('itemPriceData', async function(result) {
     itemPriceData = result.itemPriceData;
+    console.log(itemPriceData);
     if (itemPriceData == undefined) {
       console.log('itemPriceData needs to be acquired for the first time.');
-      await updateItemData();
-    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (86400*1000)) {
-      console.log('Need to update itemData.');
-      await updateItemData();
+      await updateitemPriceData();
+    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
+      console.log('Need to update itemPriceData.');
+      await updateitemPriceData();
     }else {
-      console.log('itemData acquired from cache.');
+      console.log('itemPriceData acquired from cache.');
     }
   });
 
@@ -48,7 +49,6 @@ async function priceTrade(btn) {
         response.text().then((text) => {
           var info = JSON.parse(text.match(/(?<='economy_item_[A-Za-z0-9]*',\s\s)(.*?)(?=,"descriptions")/g)[0] + '}');
           var skin = info.market_hash_name;
-
           try {
             var priceOptions = Object.keys(itemPriceData.items_list[skin].price);
             var price;
@@ -71,8 +71,14 @@ async function priceTrade(btn) {
     }
   }
 
-  await sleep(5000);
-  console.log(itemPrices);
+  var loaded = false;
+  while (!loaded) {
+    if (itemPrices.length == trade.getElementsByClassName('trade_item').length) {
+      console.log(itemPrices);
+      loaded = true;
+    }
+    await sleep(100);
+  }
 
   var indItems1 = offers[0].getElementsByClassName('trade_item').length;
   for (var i = 0; i < offers.length; i++) {

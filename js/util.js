@@ -8,11 +8,12 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function updateItemData() {
+async function updateitemPriceData() {
   var x = new XMLHttpRequest();
   x.open('GET', 'https://csgobackpack.net/api/GetItemsList/v2/?currency=USD&no_details=true', true);
   x.onload = function () {
     itemPriceData = JSON.parse(this.response);
+    console.log(itemPriceData);
     chrome.storage.local.set({itemPriceData: itemPriceData}, () => {
       console.log('Reacquired itemPriceData.');
     });

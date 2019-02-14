@@ -30,12 +30,12 @@ async function start() {
     itemPriceData = result.itemPriceData;
     if (itemPriceData == undefined) {
       console.log('itemPriceData needs to be acquired for the first time.');
-      await updateItemData();
-    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (86400*1000)) {
-      console.log('Need to update itemData.');
-      await updateItemData();
+      await updateitemPriceData();
+    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
+      console.log('Need to update itemPriceData.');
+      await updateitemPriceData();
     }else {
-      console.log('itemData acquired from cache.');
+      console.log('itemPriceData acquired from cache.');
     }
   });
 
@@ -153,13 +153,15 @@ async function sortData(itemData, data, userId) {
       itemHolders[itemData[i].pos-1].append(p);
     }
 
-    if (options.inventorySS && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
-      var a = document.createElement('a');
-      a.innerText = 'Click for SS';
-      a.style = 'text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
-      a.href = 'https://csgo.gallery/' + itemData[i].inspect;
-      a.setAttribute('target', '_blank');
-      itemHolders[itemData[i].pos-1].append(a);
+    if (options.inventorySS && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti')) {
+      if (!itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
+        var a = document.createElement('a');
+        a.innerText = 'Click for SS';
+        a.style = 'text-decoration: none;background-color: black;font-size: 13px;position: absolute;margin: 0;top: 0%;right: 0;text-align: center;width: 100%;color: #d88b8b;z-index: 5;';
+        a.href = 'https://csgo.gallery/' + itemData[i].inspect;
+        a.setAttribute('target', '_blank');
+        itemHolders[itemData[i].pos-1].append(a);
+      }
     }
 
     if (options.inventoryPrices && itemData[i].price != 'error') {
@@ -189,11 +191,13 @@ async function sortData(itemData, data, userId) {
     var usedLinks = [];
     for (var i = 0; i < itemData.length; i++) {
       var link = 'https://api.csgofloat.com/?url=' + itemData[i].inspect;
-      if (!usedLinks.includes(link) && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti') && !itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible')) {
-        var index = itemData[i].pos;
-        floats(link, index);
-        usedLinks.push(link);
-        await sleep(500);
+      if (!usedLinks.includes(link) && !itemData[i].type.includes('Stock') && !itemData[i].type.includes('Sticker') && !itemData[i].type.includes('Graffiti')) {
+        if (!itemData[i].type.includes('Key') && !itemData[i].type.includes('Container') && !itemData[i].type.includes('Extraordinary Collectible'))) {
+          var index = itemData[i].pos;
+          floats(link, index);
+          usedLinks.push(link);
+          await sleep(500);
+        }
       }
     }
   }
