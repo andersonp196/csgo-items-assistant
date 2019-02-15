@@ -5,11 +5,13 @@ chrome.runtime.onInstalled.addListener(function(details) {
       inventoryExt: true,
       inventoryFloats: true,
       inventoryPrices: true,
+      inventoryPhases: true,
       tradeStacking: true,
       tradeSS: true,
       tradePrices: true,
       tradepageExteriors: true,
-      newCurr: true
+      newCurr: true,
+      currency: 'USD'
     }, function() {});
   }else if (details.reason === 'update') {
     //for now reset everything
@@ -18,11 +20,13 @@ chrome.runtime.onInstalled.addListener(function(details) {
       inventoryExt: true,
       inventoryFloats: true,
       inventoryPrices: true,
+      inventoryPhases: true,
       tradeStacking: true,
       tradeSS: true,
       tradePrices: true,
       tradepageExteriors: true,
-      newCurr: true
+      newCurr: true,
+      currency: 'USD'
     }, function() {});
   }
 });

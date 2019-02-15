@@ -27,7 +27,7 @@ sel.addEventListener('change', function() {
   chrome.storage.sync.set({currency:sel.value, newCurr:true}, function() {});
 });
 try {
-  chrome.storage.sync.set('currency', function(result) {
+  chrome.storage.sync.get('currency', function(result) {
     sel.value = result.currency;
   });
 }catch(err) {
@@ -38,16 +38,17 @@ var checkboxes = document.getElementsByClassName('option');
 for (var i = 0; i < checkboxes.length; i++) {
   var item = checkboxes[i];
   item.addEventListener('click', function() {
-    var id = this.id
+    var toSet = {};
     if (this.checked) {
-      chrome.storage.sync.set({id: true}, function() {});
+      toSet[this.id] = true;
     }else {
-      chrome.storage.sync.set({id: false}, function() {});
+      toSet[this.id] = false;
     }
+    chrome.storage.sync.set(toSet, function() {});
   });
 }
 
-var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradepageExteriors'];
+var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradepageExteriors'];
 chrome.storage.sync.get(options, function(result) {
   for (var key in result) {
     var value = result[key];

@@ -19,9 +19,10 @@ async function getTheData() {
 var itemPriceData = null,
     options = {};
 async function start() {
-  chrome.storage.sync.get(['tradepageExteriors', 'newCurr'], function(result) {
-    options.tradepageExteriors = result.tradepageExteriors;
-    options.newCurr = result.newCurr;
+  chrome.storage.sync.get(['tradepageExteriors', 'newCurr', 'currency'], function(result) {
+    for (var key in result) {
+      options[key] = result[key];
+    }
   });
 
   var loaded = false;
@@ -97,8 +98,6 @@ async function priceTrade(btn) {
   var loaded = false;
   while (!loaded) {
     if (itemPrices.length == trade.getElementsByClassName('trade_item').length) {
-      console.log(itemPrices);
-      console.log(itemExteriors);
       loaded = true;
     }
     await sleep(100);
@@ -112,7 +111,7 @@ async function priceTrade(btn) {
       var p = document.createElement('p');
       var color;
       if (itemPrices[(i*indItems1)+j] != 'error') {
-        p.innerHTML = '$' + itemPrices[(i*indItems1)+j];
+        p.innerHTML = itemPrices[(i*indItems1)+j] + ' ' + options.currency;
         total += itemPrices[(i*indItems1)+j];
         color = '#daa429';
       }else {
@@ -132,7 +131,7 @@ async function priceTrade(btn) {
 
     if (i%2 == 0) {
       var s = document.createElement('span');
-      s.innerHTML = '$' + total.toFixed(2);
+      s.innerHTML = total.toFixed(2) + ' ' + options.currency;
       s.style = 'color: green;';
       trade.parentNode.getElementsByClassName('tradeoffer_header')[0].append(s);
 
@@ -142,7 +141,7 @@ async function priceTrade(btn) {
       trade.parentNode.getElementsByClassName('tradeoffer_header')[0].append(s);
     }else {
       var s = document.createElement('span');
-      s.innerHTML = '$' + total.toFixed(2);
+      s.innerHTML = total.toFixed(2) + ' ' + options.currency;
       s.style = 'color: #c70000;';
       trade.parentNode.getElementsByClassName('tradeoffer_header')[0].append(s);
     }

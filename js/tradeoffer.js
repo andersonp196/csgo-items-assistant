@@ -109,7 +109,7 @@ async function stack() {
                 p2.classList.add('price');
                 var color;
                 if (price != 'error') {
-                  p2.innerText = '$' + price;
+                  p2.innerText = price + ' ' + options.currency;
                   color = '#daa429';
                 }else {
                   p2.innerText = price;
@@ -465,7 +465,7 @@ async function start() {
                 p2.classList.add('price');
                 var color;
                 if (price != 'error') {
-                  p2.innerText = '$' + price;
+                  p2.innerText = price + ' ' + options.currency;
                   color = '#daa429';
                 }else {
                   p2.innerText = price;
@@ -481,9 +481,9 @@ async function start() {
               }
             }else {
               if (tradeItems[i].parentNode.parentNode.id.includes('your') && tradeItems[i].parentNode.querySelector('p.price').innerText !== 'error') {
-                totals.yours += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
+                totals.yours += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace((' ' + options.currency), ''));
               }else if (tradeItems[i].parentNode.parentNode.id.includes('their') && price !== 'error'){
-                totals.theirs += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace('$', ''));
+                totals.theirs += Number(tradeItems[i].parentNode.querySelector('p.price').innerText.replace((' ' + options.currency), ''));
               }
             }
           }
@@ -514,11 +514,10 @@ async function getTheData() {
 }
 
 async function trade() {
-  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices', 'newCurr'], function(result) {
-    options.tradeStacking = result.tradeStacking;
-    options.tradeSS = result.tradeSS;
-    options.tradePrices = result.tradePrices;
-    options.newCurr = result.newCurr;
+  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices', 'newCurr', 'currency'], function(result) {
+    for (var key in result) {
+      options[key] = result[key];
+    }
 
     if (options.tradePrices) {
       getTheData();
@@ -526,7 +525,7 @@ async function trade() {
       var place = document.getElementsByClassName('tutorial_arrow_ctn')[0];
 
       var s = document.createElement('span');
-      s.innerText = '$0.00';
+      s.innerText = options.currency + '0.00';
       s.id = 'yourTotal';
       s.style = 'color: green; font-size: 16px;';
       place.append(s);
@@ -537,7 +536,7 @@ async function trade() {
       place.append(s);
 
       s = document.createElement('span');
-      s.innerText = '$0.00';
+      s.innerText = options.currency + '0.00';
       s.id = 'theirTotal';
       s.style = 'color: #c70000; font-size: 16px;';
       place.append(s);

@@ -19,12 +19,10 @@ async function getTheData() {
 var itemPriceData = null,
     options = {};
 async function start() {
-  chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'newCurr'], function(result) {
-    options.inventorySS = result.inventorySS;
-    options.inventoryExt = result.inventoryExt;
-    options.inventoryFloats = result.inventoryFloats;
-    options.inventoryPrices = result.inventoryPrices;
-    options.newCurr = result.newCurr;
+  chrome.storage.sync.get(['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'newCurr', 'currency'], function(result) {
+    for (var key in result) {
+      options[key] = result[key];
+    }
   });
 
   var loaded = false;
@@ -84,12 +82,14 @@ function dataLoaded(data, userId) {
 
     var descriptionData = data.rgDescriptions[classid + '_' + instanceid];
     var type = descriptionData.type;
-    var ext = descriptionData.descriptions[0].value;
-    var exterior = wearShortener(ext.replace('Exterior: '));
+    var phase = dopplerPhaseShortener(descriptionData.icon_url);
 
     var name = descriptionData.market_hash_name;
     if (name.includes('Graffiti') && !name.includes('Sealed')) {
       name = 'Sealed ' + name;
+    }
+    if (name.includes('(')) {
+      var exterior = wearShortener(name.split('(')[1].replace(')', ''));
     }
     var inspect;
     if (descriptionData.actions !== undefined) {
@@ -112,7 +112,7 @@ function dataLoaded(data, userId) {
     }
     var tradeable = descriptionData.tradeable;
 
-    itemData.push({exterior: exterior, id: id, classid: classid, instanceid: instanceid, inspect: inspect, name: name, tradeable: tradeable, type: type, price: price, pos: pos});
+    itemData.push({exterior: exterior, id: id, classid: classid, instanceid: instanceid, inspect: inspect, name: name, tradeable: tradeable, type: type, price: price, pos: pos, phase: phase});
   }
 
   itemData.sort(function(a,b){
@@ -128,6 +128,8 @@ async function sortData(itemData, data, userId) {
   await pageCode(`Filter.ClearFilter()`);
   await sleep(100);
 
+  console.log(itemData);
+
   var itemHolders = document.getElementById('inventory_' + userId + '_730_2').querySelectorAll('div.itemHolder:not(.disabled)');
   for (var i = 0; i < itemData.length; i++) {
     itemHolders[itemData[i].pos-1].style.position = 'relative';
@@ -135,7 +137,27 @@ async function sortData(itemData, data, userId) {
     if (options.inventoryExt) {
       var p = document.createElement('p');
       p.innerText = itemData[i].exterior;
-      p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 2%; left: 5%; z-index: 4; color: #c44610;';
+      p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 17%; left: 5%; z-index: 4; color: #c44610;';
+      itemHolders[itemData[i].pos-1].append(p);
+    }
+
+    if (options.inventoryPhases && itemData[i].phase !== '') {
+      itemData[i].phase;
+      var p = document.createElement('p');
+      p.innerText = itemData[i].phase;
+      var color;
+      if (itemData[i].phase == 'Ruby') {
+        color = '#c00000';
+      }else if (itemData[i].phase == 'Sapph') {
+        color = '#00d6e7';
+      }else if (itemData[i].phase == 'Pearl') {
+        color = '#734aff';
+      }else if (itemData[i].phase == 'Emrld') {
+        color = '#20ea42';
+      }else {
+        color = '#9300f7';
+      }
+      p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 17%; right: 5%; z-index: 4; color: ' + color + ';';
       itemHolders[itemData[i].pos-1].append(p);
     }
 
@@ -152,7 +174,7 @@ async function sortData(itemData, data, userId) {
 
     if (options.inventoryPrices && itemData[i].price != 'error') {
       var p2 = document.createElement('p');
-      p2.innerText = '$' + itemData[i].price;
+      p2.innerText = itemData[i].price + ' ' + options.currency;
       p2.style = 'font-size: 14px; position: absolute; margin: 0; bottom: 2%; right: 5%; z-index: 4; color: #daa429;';
       itemHolders[itemData[i].pos-1].append(p2);
     }
