@@ -1,6 +1,6 @@
 {
   "name": "CSGO Items Assistant",
-  "short_name": "CSGOIA",
+  "short_name": "CIA",
   "description": "An extension to help with CSGO trading.",
   "homepage_url": "https://github.com/andersonp196/csgo-items-assistant",
   "version": "1.0.3",

@@ -88,8 +88,11 @@ function dataLoaded(data, userId) {
     if (name.includes('Graffiti') && !name.includes('Sealed')) {
       name = 'Sealed ' + name;
     }
-    if (name.includes('(')) {
-      var exterior = wearShortener(name.split('(')[1].replace(')', ''));
+    var exterior;
+    if (containsExt(name)) {
+      exterior = wearShortener(name.split('(')[1].replace(')', ''));
+    }else {
+      exterior = '';
     }
     var inspect;
     if (descriptionData.actions !== undefined) {
@@ -127,8 +130,6 @@ async function sortData(itemData, data, userId) {
 
   await pageCode(`Filter.ClearFilter()`);
   await sleep(100);
-
-  console.log(itemData);
 
   var itemHolders = document.getElementById('inventory_' + userId + '_730_2').querySelectorAll('div.itemHolder:not(.disabled)');
   for (var i = 0; i < itemData.length; i++) {

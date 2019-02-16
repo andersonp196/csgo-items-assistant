@@ -48,7 +48,7 @@ for (var i = 0; i < checkboxes.length; i++) {
   });
 }
 
-var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradepageExteriors'];
+var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradepageExteriors','marketSS', 'marketPhases'];
 chrome.storage.sync.get(options, function(result) {
   for (var key in result) {
     var value = result[key];

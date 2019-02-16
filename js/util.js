@@ -9,7 +9,6 @@ function sleep(ms) {
 }
 
 function wearShortener(ext) {
-  console.log(ext);
   switch(ext) {
     case 'Factory New':
       return 'FN';
@@ -22,6 +21,15 @@ function wearShortener(ext) {
     case 'Battle-Scarred':
       return 'BS';
     default: return '';
+  }
+}
+
+function containsExt(str) {
+  var conditions = ['factory new','minimal wear','field-tested','well-worn','battle-scarred'];
+  if (conditions.some(el => str.toLowerCase().includes(el))) {
+    return true;
+  }else {
+    return false;
   }
 }
 

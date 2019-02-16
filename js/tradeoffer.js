@@ -525,7 +525,7 @@ async function trade() {
       var place = document.getElementsByClassName('tutorial_arrow_ctn')[0];
 
       var s = document.createElement('span');
-      s.innerText = options.currency + '0.00';
+      s.innerText = '0.00' + ' ' + options.currency;
       s.id = 'yourTotal';
       s.style = 'color: green; font-size: 16px;';
       place.append(s);
@@ -536,7 +536,7 @@ async function trade() {
       place.append(s);
 
       s = document.createElement('span');
-      s.innerText = options.currency + '0.00';
+      s.innerText = '0.00' + ' ' + options.currency;
       s.id = 'theirTotal';
       s.style = 'color: #c70000; font-size: 16px;';
       place.append(s);

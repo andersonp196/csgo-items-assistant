@@ -1,3 +1,63 @@
+async function getTheData() {
+  chrome.storage.local.get('itemPriceData', async function(result) {
+    itemPriceData = result.itemPriceData;
+    if (itemPriceData == undefined) {
+      console.log('itemPriceData needs to be acquired for the first time.');
+      await updateitemPriceData();
+    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
+      console.log('Need to update itemPriceData.');
+      await updateitemPriceData();
+    }else if (options.newCurr) {
+      console.log('Need to update itemPriceData with new currency.');
+      await updateitemPriceData();
+    }else {
+      console.log('itemPriceData acquired from cache.');
+    }
+  });
+}
+
+var itemPriceData = null,
+    options = {};
+async function start() {
+  chrome.storage.sync.get(['marketSS', 'marketPhases'], function(result) {
+    for (var key in result) {
+      options[key] = result[key];
+    }
+  });
+
+  var loaded = false;
+  while (!loaded) {
+    if (Object.keys(options).length > 0) {
+      getTheData();
+      loaded = true;
+    }
+    await sleep(100);
+  }
+
+  if (options.marketPhases) {
+    addPhases();
+  }
+
+  addMarketBtns();
+
+  var itemIds1 = getIds();
+  var itemIds2 = itemIds1;
+
+  setInterval(function() {
+    itemIds2 = getIds();
+    for (var i = 0; i < itemIds2.length; i++) {
+      if (itemIds2[i] !== itemIds1[i] || itemIds1[i] === undefined) {
+        itemIds1 = itemIds2;
+        if (options.marketPhases) {
+          addPhases();
+        }
+        addMarketBtns();
+      }
+    }
+  }, (1000));
+}
+start();
+
 async function addMarketBtns() {
   var btn = document.createElement('button');
   btn.innerText = 'Load all floats';
@@ -20,17 +80,19 @@ async function addMarketBtns() {
     items[i].append(btn2);
   }
 
-  var itemBtns = [10, 20, 50, 100];
-  for (var i = 0; i < itemBtns.length; i++) {
-    var itemBtn = document.createElement('button');
-    itemBtn.innerText = itemBtns[i] + ' Items';
-    itemBtn.style = 'background-color: orange;border: 1px solid black;margin-right: 0.5%;';
-    itemBtn.id = 'btn' + itemBtns[i];
-    itemBtn.addEventListener('click', function() {
-      var start = Number(document.getElementById('searchResults_start').innerText);
-      window.location.href = window.location.href.split('?')[0] + '?query=&start=' + start + '&count=' + this.id.replace('btn', '');
-    });
-    document.getElementsByClassName('market_paging_summary ellipsis')[0].append(itemBtn);
+  if (document.getElementById('btn10') == undefined) {
+    var itemBtns = [10, 20, 50, 100];
+    for (var i = 0; i < itemBtns.length; i++) {
+      var itemBtn = document.createElement('button');
+      itemBtn.innerText = itemBtns[i] + ' Items';
+      itemBtn.style = 'background-color: orange;border: 1px solid black;margin-right: 0.5%;';
+      itemBtn.id = 'btn' + itemBtns[i];
+      itemBtn.addEventListener('click', function() {
+        var start = Number(document.getElementById('searchResults_start').innerText);
+        window.location.href = window.location.href.split('?')[0] + '?query=&start=' + start + '&count=' + this.id.replace('btn', '');
+      });
+      document.getElementsByClassName('market_paging_summary ellipsis')[0].append(itemBtn);
+    }
   }
 }
 
@@ -43,20 +105,29 @@ function getIds() {
   return itemIds;
 }
 
-addMarketBtns();
-
-var itemIds1 = getIds();
-var itemIds2 = itemIds1;
-
-setInterval(function() {
-  itemIds2 = getIds();
-  for (var i = 0; i < itemIds2.length; i++) {
-    if (itemIds2[i] !== itemIds1[i] || itemIds1[i] === undefined) {
-      itemIds1 = itemIds2;
-      addMarketBtns();
+function addPhases() {
+  var icons = document.getElementById('searchResultsRows').querySelectorAll('img');
+  for (var i = 0; i < icons.length; i++) {
+    if (icons[i].src.includes('https://steamcommunity-a.akamaihd.net/economy/image/')) {
+      var iconUrl = icons[i].src.replace('https://steamcommunity-a.akamaihd.net/economy/image/', '').split('/')[0];
+      var phase = dopplerPhaseShortener(iconUrl);
+      if (phase !== '') {
+        var p = document.createElement('p');
+        p.innerText = phase;
+        var color;
+        switch(phase) {
+          case 'Ruby': color = '#c00000'; break;
+          case 'Sapph': color = '#00d6e7'; break;
+          case 'Pearl': color = '#734aff'; break;
+          case 'Emrld': color = '#20ea42'; break;
+          default: color = '#9300f7'; break;
+        }
+        p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 11%; right: 13%; z-index: 4; color: ' + color + ';';
+        icons[i].parentNode.append(p);
+      }
     }
   }
-}, (3*1000));
+}
 
 async function marketLoadAll() {
   var btns = document.getElementsByClassName('loadFloatBtn');
@@ -70,13 +141,14 @@ async function marketLoadAll() {
 
 async function marketLoadFloat(btn) {
   function addText(btn, wear, link) {
-    var a = document.createElement('a');
-    a.innerText = 'Click for SS';
-    a.style = 'appearance: button; -moz-appearance: button;-webkit-appearance: button;text-decoration: none;background-color: black;font-size: 13px;color: #d88b8b;';
-    a.href = 'https://csgo.gallery/' + link;
-    a.setAttribute('target', '_blank');
-    btn.parentNode.append(a);
-
+    if (options.marketSS) {
+      var a = document.createElement('a');
+      a.innerText = 'Click for SS';
+      a.style = 'appearance: button; -moz-appearance: button;-webkit-appearance: button;text-decoration: none;background-color: black;font-size: 13px;color: #d88b8b;';
+      a.href = 'https://csgo.gallery/' + link;
+      a.setAttribute('target', '_blank');
+      btn.parentNode.append(a);
+    }
     var p = document.createElement('span');
     p.innerHTML = wear;
     p.style = 'font-size: 14px;margin-left: 1%;color: #daa429;';
