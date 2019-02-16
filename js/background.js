@@ -1,20 +1,19 @@
 chrome.runtime.onInstalled.addListener(function(details) {
+  var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradePhases',
+                 'tradepageExteriors', 'marketSS', 'marketPhases', 'lastAcquired'];
+
   if (details.reason === 'install') {
-    chrome.storage.sync.set({
-      inventorySS: true,
-      inventoryExt: true,
-      inventoryFloats: true,
-      inventoryPrices: true,
-      inventoryPhases: true,
-      tradeStacking: true,
-      tradeSS: true,
-      tradePrices: true,
-      tradepageExteriors: true,
-      newCurr: true,
-      currency: 'USD'
-    }, function() {});
+    for (var i = 0; i < options.length; i++) {
+      if (options[i] == 'lastAcquired') {
+        chrome.storage.sync.set({lastAcquired: 0}, function() {});
+      }else {
+        var toSet = {};
+        toSet[options[i]] = true;
+        chrome.storage.sync.set(toSet, function() {});
+      }
+    }
+    chrome.storage.sync.set({currency:'USD', newCurr:true}, function() {});
   }else if (details.reason === 'update') {
-    var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradepageExteriors', 'marketSS', 'marketPhases'];
     chrome.storage.sync.get(options, (result) => {
       for (var i = 0; i < options.length; i++) {
         if (result[options[i]] == undefined) {

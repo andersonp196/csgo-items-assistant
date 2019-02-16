@@ -1,21 +1,3 @@
-async function getTheData() {
-  chrome.storage.local.get('itemPriceData', async function(result) {
-    itemPriceData = result.itemPriceData;
-    if (itemPriceData == undefined) {
-      console.log('itemPriceData needs to be acquired for the first time.');
-      await updateitemPriceData();
-    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
-      console.log('Need to update itemPriceData.');
-      await updateitemPriceData();
-    }else if (options.newCurr) {
-      console.log('Need to update itemPriceData with new currency.');
-      await updateitemPriceData();
-    }else {
-      console.log('itemPriceData acquired from cache.');
-    }
-  });
-}
-
 var itemPriceData = null,
     options = {};
 async function start() {

@@ -27,7 +27,6 @@ This is a chrome browser extension that helps with trading CSGO items.
 
 ##### Todo
 - get totals of prices when opening trade that already has items in it
-- market SS and phase option
 - Price average option (and use different color text if not from that range)
 - inventory stacking
 - Doppler phases in tradeoffer and tradeoffers page
@@ -35,7 +34,6 @@ This is a chrome browser extension that helps with trading CSGO items.
 - add link to market items on item (including ST and souveneir) in inventory
 - change border around items if they are ST or souveneir (inventory and tradeoffer)
 - fix tradeoffer search being broken (add all keys to trade then remove them and try searching 'key' again)
-- add data stashing for the market so floats will stay with listings until page is reloaded
 
 ### To install:
 - Download the zip of this project

@@ -42,11 +42,32 @@ async function updateitemPriceData() {
       itemPriceData = JSON.parse(this.response);
       chrome.storage.local.set({itemPriceData: itemPriceData}, () => {
         console.log('Reacquired itemPriceData.');
-        chrome.storage.sync.set({newCurr:false}, function() {});
+        var toSet = {};
+        toSet['newCurr'] = false;
+        toSet['lastAcquired'] = (new Date()).getTime();
+        chrome.storage.sync.set(toSet, function() {});
       });
     }
     x.send();
     return 'done';
+  });
+}
+
+async function getTheData() {
+  chrome.storage.local.get(['itemPriceData', 'lastAcquired'], async function(result) {
+    itemPriceData = result.itemPriceData;
+    if (itemPriceData == undefined) {
+      console.log('itemPriceData needs to be acquired for the first time.');
+      await updateitemPriceData();
+    }else if ((new Date()).getTime()-(result.lastAcquired) > (2*86400*1000)) {
+      console.log('Need to update itemPriceData.');
+      await updateitemPriceData();
+    }else if (options.newCurr) {
+      console.log('Need to update itemPriceData with new currency.');
+      await updateitemPriceData();
+    }else {
+      console.log('itemPriceData acquired from cache.');
+    }
   });
 }
 

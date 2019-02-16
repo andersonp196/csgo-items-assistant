@@ -1,23 +1,6 @@
-async function getTheData() {
-  chrome.storage.local.get('itemPriceData', async function(result) {
-    itemPriceData = result.itemPriceData;
-    if (itemPriceData == undefined) {
-      console.log('itemPriceData needs to be acquired for the first time.');
-      await updateitemPriceData();
-    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
-      console.log('Need to update itemPriceData.');
-      await updateitemPriceData();
-    }else if (options.newCurr) {
-      console.log('Need to update itemPriceData with new currency.');
-      await updateitemPriceData();
-    }else {
-      console.log('itemPriceData acquired from cache.');
-    }
-  });
-}
-
 var itemPriceData = null,
-    options = {};
+    options = {},
+    cachedData = {};
 async function start() {
   chrome.storage.sync.get(['marketSS', 'marketPhases'], function(result) {
     for (var key in result) {
@@ -28,7 +11,6 @@ async function start() {
   var loaded = false;
   while (!loaded) {
     if (Object.keys(options).length > 0) {
-      getTheData();
       loaded = true;
     }
     await sleep(100);
@@ -69,15 +51,19 @@ async function addMarketBtns() {
 
   var items = document.getElementsByClassName('market_listing_item_name_block');
   for (var i = 0; i < items.length; i++) {
-    var btn2 = document.createElement('button');
-    btn2.innerText = 'Load float';
-    btn2.id = 'lfBtn' + i;
-    btn2.className = 'loadFloatBtn';
-    btn2.style = 'border: 1px solid black;background-color: #339433;';
-    btn2.addEventListener('click', function() {
-      marketLoadFloat(this);
-    });
-    items[i].append(btn2);
+    if (items[i].querySelector('span').id in cachedData) {
+      items[i].innerHTML = cachedData[items[i].querySelector('span').id];
+    }else {
+      var btn2 = document.createElement('button');
+      btn2.innerText = 'Load float';
+      btn2.id = 'lfBtn' + i;
+      btn2.className = 'loadFloatBtn';
+      btn2.style = 'border: 1px solid black;background-color: #339433;';
+      btn2.addEventListener('click', function() {
+        marketLoadFloat(this);
+      });
+      items[i].append(btn2);
+    }
   }
 
   if (document.getElementById('btn10') == undefined) {
@@ -170,6 +156,7 @@ async function marketLoadFloat(btn) {
         var wear = JSON.parse(this.response).iteminfo.floatvalue;
         addText(btn, wear, link);
         btn.style.display = 'none';
+        cachedData[btn.parentNode.querySelector('span').id] = btn.parentNode.innerHTML;
       }
       x.send();
     }catch(err) {

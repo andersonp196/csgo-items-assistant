@@ -46,7 +46,7 @@ async function stack() {
                   document.getElementById('hiddenDiv').innerText += ${itemLink}.rgItem.icon_url`);
         var itemInfo = document.getElementById('hiddenDiv').innerText.split(',');
         var d = document.createElement('div');
-        d.innerText = `${itemInfo[0]},${itemInfo[1]},${itemInfo[2]},https://steamcommunity-a.akamaihd.net/economy/image/${itemInfo[3]}/96fx96f`;
+        d.innerText = `${itemInfo[0]},${itemInfo[1]},${itemInfo[2]},https://steamcommunity-a.akamaihd.net/economy/image/${itemInfo[3]}`;
         d.classList.add('itemInfo');
         d.style.display = 'none';
         items[j].append(d);
@@ -115,12 +115,12 @@ async function stack() {
                   p2.innerText = price;
                   color = 'yellow';
                 }
-                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
+                p2.style = 'position: absolute; width: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); z-index: 4; color: ' + color + ';';
                 curItem.html.append(p2);
               }catch(err) {
                 var p2 = document.createElement('p');
                 p.innerHTML = 'error';
-                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
+                p2.style = 'position: absolute; width: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); z-index: 4; color: yellow;';
                 curItem.html.append(p2);
               }
             }
@@ -133,6 +133,26 @@ async function stack() {
               a.href = 'https://csgo.gallery/' + currItemInfo[0].replace('%owner_steamid%', steamId).replace('%assetid%', itemAssetId);
               a.setAttribute('target', '_blank');
               curItem.html.append(a);
+
+              var phase = dopplerPhaseShortener(currItemInfo[3].replace('https://steamcommunity-a.akamaihd.net/economy/image/', ''));
+              if (options.tradePhases && phase !== '') {
+                var p = document.createElement('p');
+                p.innerText = phase;
+                var color;
+                if (phase == 'Ruby') {
+                  color = '#c00000';
+                }else if (phase == 'Sapph') {
+                  color = '#00d6e7';
+                }else if (phase == 'Pearl') {
+                  color = '#734aff';
+                }else if (phase == 'Emrld') {
+                  color = '#20ea42';
+                }else {
+                  color = '#9300f7';
+                }
+                p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 17%; right: 5%; z-index: 4; color: ' + color + ';';
+                curItem.html.append(p);
+              }
             }
 
             invPages[j].append(curItem.html);
@@ -471,7 +491,7 @@ async function start() {
                   p2.innerText = price;
                   color = 'yellow';
                 }
-                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: ' + color + ';';
+                p2.style = 'position: absolute;w idth: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); z-index: 4; color: ' + color + ';';
                 tradeItems[i].parentNode.append(p2);
               }catch(err) {
                 var p2 = document.createElement('p');
@@ -495,26 +515,8 @@ async function start() {
   }, 200);
 }
 
-async function getTheData() {
-  chrome.storage.local.get('itemPriceData', async function(result) {
-    itemPriceData = result.itemPriceData;
-    if (itemPriceData == undefined) {
-      console.log('itemPriceData needs to be acquired for the first time.');
-      await updateitemPriceData();
-    }else if ((new Date()).getTime()-(itemPriceData.timestamp*1000) > (2*86400*1000)) {
-      console.log('Need to update itemPriceData.');
-      await updateitemPriceData();
-    }else if (options.newCurr) {
-      console.log('Need to update itemPriceData with new currency.');
-      await updateitemPriceData();
-    }else {
-      console.log('itemPriceData acquired from cache.');
-    }
-  });
-}
-
 async function trade() {
-  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices', 'newCurr', 'currency'], function(result) {
+  chrome.storage.sync.get(['tradeStacking', 'tradeSS', 'tradePrices', 'tradePhases', 'newCurr', 'currency'], function(result) {
     for (var key in result) {
       options[key] = result[key];
     }
