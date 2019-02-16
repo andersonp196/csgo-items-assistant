@@ -1,6 +1,6 @@
 chrome.runtime.onInstalled.addListener(function(details) {
   var options = ['inventorySS', 'inventoryExt', 'inventoryFloats', 'inventoryPrices', 'inventoryPhases', 'tradeStacking', 'tradeSS', 'tradePrices', 'tradePhases',
-                 'tradepageExteriors', 'marketSS', 'marketPhases', 'lastAcquired'];
+                 'tradepageExteriors', 'tradepagePhases', 'marketSS', 'marketPhases', 'lastAcquired'];
 
   if (details.reason === 'install') {
     for (var i = 0; i < options.length; i++) {

@@ -1,7 +1,7 @@
 var itemPriceData = null,
     options = {};
 async function start() {
-  chrome.storage.sync.get(['tradepageExteriors', 'newCurr', 'currency'], function(result) {
+  chrome.storage.sync.get(['tradepageExteriors', 'newCurr', 'currency', 'tradepagePhases'], function(result) {
     for (var key in result) {
       options[key] = result[key];
     }
@@ -37,12 +37,23 @@ start();
 async function priceTrade(btn) {
   btn.innerText = 'Working...';
   btn.style.backgroundColor = '#7ffb7f'
+
+  //making secondary icons 96x96
+  var imageHolders = document.getElementsByClassName('tradeoffer_items secondary')[0].querySelectorAll('div.trade_item');
+  for (var i = 0; i < imageHolders.length; i++) {
+    imageHolders[i].style.width = '96px';
+    imageHolders[i].style.height = '96px';
+    imageHolders[i].querySelector('img').src = imageHolders[i].querySelector('img').src.replace('73fx73f', '96fx96f');
+    imageHolders[i].querySelector('img').srcset = imageHolders[i].querySelector('img').src.replace('73fx73f', '96fx96f').replace('73fx73f', '96fx96f');
+  }
+
   var index = Number(btn.id.replace('priceTrade', ''));
   var trade = document.getElementsByClassName('tradeoffer_items_ctn ')[index];
 
   var offers = trade.getElementsByClassName('tradeoffer_item_list');
   var itemPrices = [],
-      itemExteriors = [];
+      itemExteriors = [],
+      itemPhases = [];
 
   for (var i = 0; i < offers.length; i++) {
     var individualItems = offers[i].getElementsByClassName('trade_item');
@@ -54,6 +65,9 @@ async function priceTrade(btn) {
           var skin = info.market_hash_name;
           if (options.tradepageExteriors) {
             itemExteriors.push(wearShortener(skin.split('(')[1].replace(')', '')));
+          }
+          if (options.tradepagePhases) {
+            itemPhases.push(dopplerPhaseShortener(info.icon_url));
           }
           try {
             var priceOptions = Object.keys(itemPriceData.items_list[skin].price);
@@ -100,13 +114,32 @@ async function priceTrade(btn) {
         p.innerHTML = price;
         color = 'yellow';
       }
-      p.style = 'position: absolute;top: 70%;left: 70%;transform: translate(-50%, -50%);color: ' + color + ';';
+      p.style = 'position: absolute; width: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); color: ' + color + ';';
       individualItems[j].append(p);
 
       if (options.tradepageExteriors) {
         p = document.createElement('p');
         p.innerText = itemExteriors[(i*indItems1)+j];
         p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 2%; left: 5%; z-index: 4; color: #c44610;';
+        individualItems[j].append(p);
+      }
+
+      if (options.tradepagePhases && itemPhases[i] !== '') {
+        p = document.createElement('p');
+        p.innerText = itemPhases[i];
+        var color;
+        if (itemPhases[i] == 'Ruby') {
+          color = '#c00000';
+        }else if (itemPhases[i] == 'Sapph') {
+          color = '#00d6e7';
+        }else if (itemPhases[i] == 'Pearl') {
+          color = '#734aff';
+        }else if (itemPhases[i] == 'Emrld') {
+          color = '#20ea42';
+        }else {
+          color = '#9300f7';
+        }
+        p.style = 'font-size: 16px; font-weight: bold; position: absolute; margin: 0; bottom: 17%; right: 5%; z-index: 4; color: ' + color + ';';
         individualItems[j].append(p);
       }
     }

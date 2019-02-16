@@ -491,12 +491,12 @@ async function start() {
                   p2.innerText = price;
                   color = 'yellow';
                 }
-                p2.style = 'position: absolute;w idth: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); z-index: 4; color: ' + color + ';';
+                p2.style = 'position: absolute;width: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); z-index: 4; color: ' + color + ';';
                 tradeItems[i].parentNode.append(p2);
               }catch(err) {
                 var p2 = document.createElement('p');
                 p.innerHTML = 'error';
-                p2.style = 'position: absolute;top: 70%;left: 50%;transform: translate(-50%, -50%);z-index: 4;color: yellow;';
+                p2.style = 'position: absolute;width: 100%; text-align: right; top: 78%; left: 50%; transform: translate(-50%, -50%); z-index: 4; color: yellow;';
                 tradeItems[i].parentNode.append(p2);
               }
             }else {
