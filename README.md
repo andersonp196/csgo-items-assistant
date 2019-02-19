@@ -1,4 +1,4 @@
-# trade-pricing-tool
+# csgo-items-assistant
 This is a chrome browser extension that helps with trading CSGO items.
 
 ### Current Functionality
